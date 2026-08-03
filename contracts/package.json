@@ -1,0 +1,17 @@
+{
+  "name": "railsplit-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:coston2": "hardhat run scripts/deploy.js --network coston2"
+  },
+  "dependencies": {
+    "@flarenetwork/flare-periphery-contracts": "^0.1.52"
+  },
+  "devDependencies": {
+    "ethers": "^6.17.0",
+    "hardhat": "^2.26.1"
+  }
+}
