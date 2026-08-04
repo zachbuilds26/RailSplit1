@@ -1,28 +1,51 @@
 @import "tailwindcss";
 
 :root {
-  --background: #071017;
-  --background-deep: #03080c;
-  --surface: #0b1821;
-  --surface-raised: #102330;
-  --surface-hover: #142b3a;
-  --line: #1c3849;
-  --line-strong: #31546b;
-  --ink: #e8f3f8;
-  --muted: #8aa5b5;
-  --faint: #7f98a7;
-  --accent: #a9e1fb;
-  --chart-line: #358cb7;
-  --accent-ink: #071017;
-  --success: #9ad7bd;
-  --warning: #f3cc8c;
-  --danger: #f19c9c;
+  --background: #000000;
+  --background-deep: #000000;
+  --surface: #111111;
+  --surface-raised: #1a1a1a;
+  --surface-hover: #222222;
+  --line: #333333;
+  --line-strong: #444444;
+  --ink: #ffffff;
+  --muted: #888888;
+  --faint: #666666;
+  --accent: #ffffff;
+  --chart-line: #555555;
+  --accent-ink: #000000;
+  --success: #888888;
+  --warning: #aaaaaa;
+  --danger: #cccccc;
+}
+
+.halftone {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+.halftone-dense {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-size: 2px 2px;
+}
+
+.halftone-light {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 5px 5px;
+}
+
+.engraved {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.4);
+}
+
+.engraved-deep {
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.03);
 }
 
 .grid-fade {
   background-image:
-    linear-gradient(to right, rgb(169 225 251 / 0.055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(169 225 251 / 0.055) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
   background-size: 42px 42px;
 }
 
@@ -61,6 +84,8 @@ body {
   background: var(--background);
   color: var(--ink);
   font-family: var(--font-space-grotesk), Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
@@ -104,7 +129,6 @@ select:focus-visible {
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
-
 
 .railsplit-flow {
   list-style: none;
