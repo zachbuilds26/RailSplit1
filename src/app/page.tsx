@@ -89,6 +89,14 @@ export default function Home() {
             className="object-cover object-center opacity-30"
           />
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+          <div className="absolute right-0 bottom-0 z-0 h-full w-[50%] opacity-[0.12]" style={{ maskImage: 'linear-gradient(to left, black 20%, transparent 80%)' }}>
+            <Image
+              src="/ChatGPT Image Aug 5, 2026, 12_46_29 AM.png"
+              alt=""
+              fill
+              className="object-contain object-right"
+            />
+          </div>
         </div>
         <header className="relative z-10 mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-10">
           <RailsplitLogo />
