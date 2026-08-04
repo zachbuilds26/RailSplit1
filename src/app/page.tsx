@@ -119,7 +119,7 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pb-20 pt-12 text-center sm:px-8 sm:pb-24 lg:px-10 lg:pt-24">
+        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pb-12 pt-12 text-center sm:px-8 sm:pb-16 lg:px-10 lg:pt-24">
           <p className="inline-flex items-center gap-2 border border-line bg-background-deep/70 px-2.5 py-1 text-[10px] font-semibold tracking-[0.15em] text-muted uppercase">
             <span className="size-1.5 bg-accent" />
             Live on {railsplitChain.name}
@@ -165,7 +165,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="workflow" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
+      <section id="workflow" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
         <div className="max-w-2xl">
           <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">How it works</p>
           <h2 className="font-display mt-4 text-4xl leading-[0.94] tracking-[-0.045em] sm:text-5xl">
@@ -175,7 +175,7 @@ export default function Home() {
           </h2>
         </div>
 
-        <ol className="railsplit-flow mt-12" aria-label="RailSplit workflow">
+          <ol className="railsplit-flow mt-8" aria-label="RailSplit workflow">
           {workflowSteps.map((step) => (
             <li key={step.number} className="railsplit-flow__step">
               <p className="railsplit-flow__number">{step.number}</p>
@@ -187,14 +187,14 @@ export default function Home() {
       </section>
 
       <section id="why-flare" className="border-y border-line bg-background-deep">
-        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
           <div className="max-w-2xl">
             <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">Why Flare</p>
             <h2 className="font-display mt-4 text-4xl tracking-[-0.045em] sm:text-5xl">
               Built around live settlement.
             </h2>
           </div>
-          <div className="mt-12 grid border-t border-line md:grid-cols-3">
+          <div className="mt-8 grid border-t border-line md:grid-cols-3">
             {whyFlare.map((item) => (
               <article
                 key={item.number}
@@ -209,7 +209,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="faq" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
+      <section id="faq" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
         <div className="max-w-2xl">
           <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">FAQ</p>
           <h2 className="font-display mt-4 text-4xl tracking-[-0.045em] sm:text-5xl">
@@ -220,7 +220,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-4 lg:grid-cols-2">
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
           {faqItems.map((item) => (
             <details
               key={item.question}
