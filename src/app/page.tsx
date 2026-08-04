@@ -80,14 +80,6 @@ export default function Home() {
       <section className="grid-fade relative isolate overflow-hidden border-b border-line">
         <div className="absolute inset-x-0 top-0 h-px bg-accent/50" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <Image
-            src="/railsplit-hero-mikhail-nilov-7534799.jpg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center opacity-30"
-          />
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
           <div className="absolute right-0 bottom-0 z-0 h-full w-[50%] opacity-[0.12]" style={{ maskImage: 'linear-gradient(to left, black 20%, transparent 80%)' }}>
             <Image
