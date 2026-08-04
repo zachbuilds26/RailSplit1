@@ -184,24 +184,23 @@ export default function Home() {
         </ol>
       </section>
 
-      <section id="why-flare" className="border-y border-line bg-background-deep">
+<section id="why-flare" className="border-y border-line bg-background-deep">
         <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
-          <div className="max-w-2xl">
+          <div className="mx-auto max-w-2xl text-center">
             <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">Why Flare</p>
             <h2 className="font-display mt-4 text-4xl tracking-[-0.045em] sm:text-5xl">
               Built around live settlement.
             </h2>
           </div>
-          <div className="mt-8 grid border-t border-line md:grid-cols-3">
+          <div className="mt-16 flex flex-col">
             {whyFlare.map((item) => (
-              <article
-                key={item.number}
-                className="border-b border-line py-7 md:border-b-0 md:border-r md:px-7 md:first:pl-0 md:last:border-r-0"
-              >
-                <p className="text-xs font-semibold tracking-[0.16em] text-accent">{item.number}</p>
-                <h3 className="mt-8 text-lg font-medium">{item.title}</h3>
-                <p className="mt-3 max-w-xs text-sm leading-6 text-muted">{item.copy}</p>
-              </article>
+              <div key={item.number} className="flex flex-col gap-4 border-b border-line py-8 md:flex-row md:items-start md:gap-8 last:border-b-0">
+                <p className="text-xs font-semibold tracking-[0.16em] text-accent md:w-16">{item.number}</p>
+                <div>
+                  <h3 className="text-xl font-medium">{item.title}</h3>
+                  <p className="mt-3 max-w-md text-sm leading-6 text-muted">{item.copy}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
