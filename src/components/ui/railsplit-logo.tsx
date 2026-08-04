@@ -14,7 +14,7 @@ export function RailsplitLogo({ href = "/", compact = false }: RailsplitLogoProp
         aria-hidden="true"
       >
         <Image
-          src="/railsplit-mark-20260802.png"
+          src="/ChatGPT%20Image%20Aug%204,%202026,%2010_58_53%20PM.png"
           alt=""
           fill
           sizes={compact ? "32px" : "36px"}
