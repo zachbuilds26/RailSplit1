@@ -206,7 +206,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="faq" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
+      <section id="faq" className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10 overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 w-[45%] opacity-[0.12]">
+          <Image
+            src="/faq-engraving.svg"
+            alt=""
+            fill
+            className="object-contain object-right"
+          />
+        </div>
         <div className="max-w-2xl">
           <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">FAQ</p>
           <h2 className="font-display mt-4 text-4xl tracking-[-0.045em] sm:text-5xl">
