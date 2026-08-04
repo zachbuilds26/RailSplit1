@@ -42,7 +42,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --font-display: var(--font-syne);
+  --font-display: var(--font-chakra);
   --font-sans: var(--font-space-grotesk);
 }
 
@@ -89,7 +89,8 @@ select:focus-visible {
 }
 
 .font-display {
-  font-family: var(--font-syne), Arial, sans-serif;
+  font-family: var(--font-chakra), Arial, sans-serif;
+  font-weight: 700;
 }
 
 .tabular-nums {
@@ -137,7 +138,7 @@ select:focus-visible {
   font-size: clamp(1.35rem, 2vw, 1.75rem);
   line-height: 1.08;
   letter-spacing: -0.045em;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .railsplit-flow__copy {
@@ -171,7 +172,7 @@ select:focus-visible {
   font-family: var(--font-display), Arial, sans-serif;
   font-size: 1.02rem;
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.03em;
 }
 
@@ -317,7 +318,7 @@ select:focus-visible {
   font-size: clamp(1.45rem, 2.8vw, 2rem);
   line-height: 1.15;
   letter-spacing: -0.045em;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .railsplit-docs__section p,
@@ -384,7 +385,7 @@ select:focus-visible {
   font-size: 1rem;
   line-height: 1.25;
   letter-spacing: -0.03em;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .railsplit-docs__qa dd {
