@@ -125,9 +125,9 @@ export default function Home() {
             Live on {railsplitChain.name}
           </p>
           <h1 className="font-display mt-7 max-w-3xl text-5xl leading-[0.92] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-            One link.
+            Accept payments.
             <br />
-            <span className="text-accent/95">Clear payments.</span>
+            <span className="text-accent/95">Settled on Flare.</span>
           </h1>
           <p className="mt-7 max-w-2xl text-base leading-7 text-muted">
             RailSplit helps merchants publish a simple payment link with a clear dollar price and
