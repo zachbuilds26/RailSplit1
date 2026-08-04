@@ -207,7 +207,7 @@ export default function Home() {
       </section>
 
       <section id="faq" className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10 overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 w-[45%] opacity-[0.7]">
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 w-[45%] opacity-[0.10]">
           <Image
             src="/faq-engraving.svg"
             alt=""
