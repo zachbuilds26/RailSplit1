@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { formatUnits } from "viem";
 import { useAccount, useBalance, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { Icon } from "@/components/ui/icon";
@@ -21,14 +21,12 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
     query: { enabled: Boolean(address), refetchInterval: 15000 },
   });
 
-  const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
+  const [hasInjectedWallet] = useState(
+    () => typeof window !== "undefined" && Boolean((window as Window & { ethereum?: unknown }).ethereum),
+  );
   const [switchFailure, setSwitchFailure] = useState("");
   const injectedConnector = connectors.find((connector) => connector.type === "injected");
   const wrongChain = isConnected && chainId !== railsplitChain.id;
-
-  useEffect(() => {
-    setHasInjectedWallet(Boolean((window as Window & { ethereum?: unknown }).ethereum));
-  }, []);
 
   async function handleConnect(connector: (typeof connectors)[number] | undefined) {
     if (!connector) return;

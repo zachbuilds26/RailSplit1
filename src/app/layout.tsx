@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Chakra_Petch, Space_Grotesk } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -15,9 +15,27 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "RailSplit",
+  title: {
+    default: "RailSplit",
+    template: "%s — RailSplit",
+  },
   description:
     "RailSplit helps merchants publish a clear dollar-priced checkout link and settle directly on Flare.",
+  openGraph: {
+    title: "RailSplit",
+    description:
+      "RailSplit helps merchants publish a clear dollar-priced checkout link and settle directly on Flare.",
+    url: "https://railsplit.com",
+    siteName: "RailSplit",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary",
+    title: "RailSplit",
+    description:
+      "RailSplit helps merchants publish a clear dollar-priced checkout link and settle directly on Flare.",
+  },
   icons: {
     icon: [
       { url: "/railsplit-icon-black.png", sizes: "32x32", type: "image/png" },
@@ -25,6 +43,10 @@ export const metadata: Metadata = {
       { url: "/railsplit-icon-black.png", sizes: "180x180", type: "image/png", rel: "apple-touch-icon" },
     ],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
 };
 
 export default function RootLayout({

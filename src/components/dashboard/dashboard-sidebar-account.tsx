@@ -3,6 +3,7 @@
 import { useAccount, useBalance } from "wagmi";
 import { formatUnits } from "viem";
 import { railsplitChain, shortenAddress } from "@/lib/chain";
+import { ConnectWallet } from "@/components/wallet/connect-wallet";
 
 /**
  * Shows the connected wallet identity in the sidebar account section.
@@ -23,9 +24,9 @@ export function DashboardSidebarAccount() {
           Account
         </p>
         <p className="mt-2 text-sm text-muted">Not connected</p>
-        <span className="mt-3 inline-flex border border-line px-2 py-1 text-[10px] tracking-[0.12em] text-muted uppercase">
-          Connect a wallet to view
-        </span>
+        <div className="mt-3">
+          <ConnectWallet compact />
+        </div>
       </div>
     );
   }

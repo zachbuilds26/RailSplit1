@@ -77,7 +77,7 @@ export default function Home() {
         </div>
         <header className="relative z-10 mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-10">
           <RailsplitLogo />
-          <nav className="hidden items-center gap-6 text-xs text-muted sm:flex" aria-label="Main navigation">
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted sm:gap-6" aria-label="Main navigation">
             <a href="#workflow" className="hover:text-ink">
               How it works
             </a>
@@ -190,7 +190,7 @@ export default function Home() {
 <section id="why-flare" className="relative bg-background-deep overflow-hidden">
         <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 w-full h-full opacity-[0.40]" style={{ maskImage: 'radial-gradient(ellipse 70% 80% at 90% 60%, black 5%, transparent 70%)', transform: 'translateX(120px) translateY(-20px) scale(1.2)', transformOrigin: 'bottom right' }}>
           <Image
-            src="/ques.png"
+            src="/ques.webp"
             alt=""
             fill
             sizes="100vw"
@@ -234,6 +234,7 @@ export default function Home() {
           {faqItems.map((item) => (
             <details
               key={item.question}
+              name="faq"
               className="group rounded-none border border-line bg-surface p-5 transition hover:border-line-strong hover:bg-surface-hover"
             >
               <summary className="flex cursor-pointer items-start justify-between gap-4 text-left font-display text-xl leading-tight tracking-[-0.035em]">
