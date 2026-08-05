@@ -20,9 +20,9 @@ export const metadata: Metadata = {
     "RailSplit helps merchants publish a clear dollar-priced checkout link and settle directly on Flare.",
   icons: {
     icon: [
-      { url: "/RailSplit_logo_transparent.png", sizes: "32x32", type: "image/png" },
-      { url: "/RailSplit_logo_transparent.png", sizes: "192x192", type: "image/png" },
-      { url: "/RailSplit_logo_transparent.png", sizes: "180x180", type: "image/png", rel: "apple-touch-icon" },
+      { url: "/railsplit-icon-black.png", sizes: "32x32", type: "image/png" },
+      { url: "/railsplit-icon-black.png", sizes: "192x192", type: "image/png" },
+      { url: "/railsplit-icon-black.png", sizes: "180x180", type: "image/png", rel: "apple-touch-icon" },
     ],
   },
 };
