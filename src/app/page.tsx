@@ -185,7 +185,7 @@ export default function Home() {
       </section>
 
 <section id="why-flare" className="relative bg-background-deep overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 opacity-[0.09]" style={{ maskImage: 'radial-gradient(ellipse 50% 60% at 80% 80%, black 10%, transparent 80%)', transform: 'translateX(300px) translateY(80px) scale(2.2)', transformOrigin: 'bottom right' }}>
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 opacity-[0.40]" style={{ maskImage: 'radial-gradient(ellipse 50% 60% at 80% 80%, black 10%, transparent 80%)', transform: 'translateX(300px) translateY(80px) scale(2.2)', transformOrigin: 'bottom right' }}>
           <Image
             src="/ques.png"
             alt=""
