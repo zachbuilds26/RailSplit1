@@ -14,7 +14,7 @@ export function RailsplitLogo({ href = "/", compact = false }: RailsplitLogoProp
         aria-hidden="true"
       >
         <Image
-          src="/railsplit-mark-20260802.png"
+          src="/RailSplit_logo_transparent.png"
           alt=""
           fill
           sizes={compact ? "32px" : "36px"}
