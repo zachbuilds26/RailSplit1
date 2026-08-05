@@ -210,8 +210,7 @@ export default function Home() {
           </div>
           <div className="mt-16 flex flex-col">
             {whyFlare.map((item) => (
-              <div key={item.number} className="flex flex-col gap-4 py-8 md:flex-row md:items-start md:gap-8 last:border-b-0">
-                <div className="border-b border-line w-[600px] mx-auto" />
+              <div key={item.number} className="flex flex-col gap-4 py-8 md:flex-row md:items-start md:gap-8">
                 <p className="text-xs font-semibold tracking-[0.16em] text-accent md:w-16">{item.number}</p>
                 <div>
                   <h3 className="text-xl font-medium">{item.title}</h3>
