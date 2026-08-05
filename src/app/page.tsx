@@ -5,24 +5,6 @@ import { RailsplitLogo } from "@/components/ui/railsplit-logo";
 import { explorerAddress, railsplitChain, shortenAddress } from "@/lib/chain";
 import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
 
-const workflowSteps = [
-  {
-    number: "01",
-    title: "Set the price",
-    copy: "Choose a dollar amount once, then publish a link customers can trust.",
-  },
-  {
-    number: "02",
-    title: "Share one link",
-    copy: "Use the same checkout anywhere you need to take payment.",
-  },
-  {
-    number: "03",
-    title: "Receive settlement",
-    copy: "Funds settle directly to the merchant wallet after payment is confirmed.",
-  },
-];
-
 const faqItems = [
   {
     question: "What is RailSplit?",
@@ -163,8 +145,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="workflow" className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10 overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none select-none absolute top-1/2 right-12 z-0 -translate-y-1/2 opacity-45" style={{ width: 'min(48vw, 700px)', height: 'auto', maskImage: 'radial-gradient(circle at center, black 60%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle at center, black 60%, transparent 100%)' }}>
+      <section id="workflow" className="relative mx-auto min-h-[420px] max-w-7xl px-5 py-20 sm:px-8 lg:px-10 overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none select-none absolute top-1/2 right-12 z-0 -translate-y-1/2 opacity-75" style={{ width: 'min(720px, 48vw)', height: 'auto', maskImage: 'radial-gradient(circle at center, black 65%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle at center, black 65%, transparent 100%)' }}>
           <Image
             src="/workflow-panels.png"
             alt=""
@@ -173,24 +155,6 @@ export default function Home() {
             className="w-full h-auto"
           />
         </div>
-        <div className="relative z-[2] max-w-2xl">
-          <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">How it works</p>
-          <h2 className="font-display mt-4 text-4xl leading-[0.94] tracking-[-0.045em] sm:text-5xl">
-            Three steps.
-            <br />
-            One clear flow.
-          </h2>
-        </div>
-
-          <ol className="railsplit-flow mt-8" aria-label="RailSplit workflow">
-          {workflowSteps.map((step) => (
-            <li key={step.number} className="railsplit-flow__step">
-              <p className="railsplit-flow__number">{step.number}</p>
-              <h3 className="railsplit-flow__title">{step.title}</h3>
-              <p className="railsplit-flow__copy">{step.copy}</p>
-            </li>
-          ))}
-        </ol>
       </section>
 
 <section id="why-flare" className="relative bg-background-deep overflow-hidden">
