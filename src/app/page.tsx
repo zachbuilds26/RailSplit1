@@ -164,7 +164,7 @@ export default function Home() {
       </section>
 
       <section id="workflow" className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10 overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 z-0 w-[50%] opacity-[0.10]" style={{ maskImage: 'radial-gradient(ellipse 60% 70% at 80% 50%, black 10%, transparent 80%)' }}>
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 z-0 w-[50%] opacity-[0.25]" style={{ maskImage: 'radial-gradient(ellipse 60% 70% at 80% 50%, black 10%, transparent 80%)' }}>
           <Image
             src="/workflow-engraving.svg"
             alt=""
