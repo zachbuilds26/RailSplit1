@@ -15,7 +15,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "RailSplit | Clear payment links on Flare",
+  title: "RailSplit",
   description:
     "RailSplit helps merchants publish a clear dollar-priced checkout link and settle directly on Flare.",
 };
