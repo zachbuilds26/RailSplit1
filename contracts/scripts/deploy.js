@@ -138,7 +138,10 @@ async function main() {
       "\" as const;\n" +
       "\nexport const DEPLOY_BLOCK = " +
       deployBlock +
-      "n;\n",
+      "n;\n" +
+      "\nexport const DEMO_SLUG = \"" +
+      seedLinks[0].slug +
+      "\" as const;\n",
     "utf8",
   );
 

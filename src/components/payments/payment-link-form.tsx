@@ -288,15 +288,19 @@ export function PaymentLinkForm() {
             </p>
           )}
 
-          {hash && receipt.isError && (
-            <a
-              href={explorerTx(hash)}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-block text-xs text-accent underline underline-offset-2 hover:text-white"
-            >
-              View the transaction on explorer
-            </a>
+          {hash && (
+            <p className="mt-3 text-xs leading-5 text-muted">
+              Waiting for the network to confirm the transaction.{" "}
+              <a
+                href={explorerTx(hash)}
+                target="_blank"
+                rel="noreferrer"
+                className="text-accent underline underline-offset-2 hover:text-white"
+              >
+                Track it on the explorer
+              </a>
+              .
+            </p>
           )}
 
           <div className="mt-8 flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">

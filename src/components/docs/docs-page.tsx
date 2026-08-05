@@ -151,6 +151,14 @@ export function DocsPage() {
                 <strong>Settle onchain.</strong> The payment confirms and moves directly to the merchant wallet.
               </li>
             </ol>
+            <div className="mt-6 overflow-hidden border border-line bg-background-deep p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/workflow-panels-cut.webp"
+                alt="RailSplit flow diagram: publish a link, share the checkout, settle onchain"
+                className="block w-full"
+              />
+            </div>
           </section>
 
           <section className="railsplit-docs__section" id="settlement">

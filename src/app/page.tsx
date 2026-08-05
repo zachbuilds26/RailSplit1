@@ -4,7 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { RailsplitLogo } from "@/components/ui/railsplit-logo";
 import { TypewriterTagline } from "@/components/landing/typewriter-tagline";
 import { explorerAddress, railsplitChain, shortenAddress } from "@/lib/chain";
-import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
+import { DEMO_SLUG, RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
 
 const faqItems = [
   {
@@ -128,7 +128,7 @@ export default function Home() {
               Create a payment link
             </Link>
             <Link
-              href="/pay/arcade-run-001"
+              href={`/pay/${DEMO_SLUG}`}
               className="inline-flex w-full items-center justify-center gap-2 border border-line px-5 py-3 text-sm font-semibold hover:border-line-strong hover:bg-surface sm:w-auto"
             >
               Open sample checkout <Icon name="arrow-up-right" className="size-4" />

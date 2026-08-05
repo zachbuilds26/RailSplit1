@@ -5,3 +5,5 @@ export const RAILSPLIT_PAY_ADDRESS =
   "0xC95e5ee1A1138DBC2a80Dd2cCA9B74f86bd492Fd" as const;
 
 export const DEPLOY_BLOCK = 33540172n;
+
+export const DEMO_SLUG = "arcade-run-001" as const;

@@ -14,9 +14,9 @@
   --accent: #ffffff;
   --chart-line: #555555;
   --accent-ink: #000000;
-  --success: #888888;
-  --warning: #aaaaaa;
-  --danger: #cccccc;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
 }
 
 .grid-fade {
