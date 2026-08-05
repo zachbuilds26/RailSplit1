@@ -151,7 +151,7 @@ export default function Home() {
       <section id="workflow" className="relative mx-auto min-h-[560px] max-w-7xl px-5 py-20 sm:px-8 lg:px-10 overflow-hidden">
         <h2
           aria-label="How it works"
-          className="absolute inset-x-0 top-[6%] z-0 px-5 text-center text-4xl leading-[0.95] tracking-[-0.055em] sm:text-6xl lg:top-[4%] lg:text-7xl"
+          className="absolute inset-x-0 top-[6%] z-0 px-5 text-center text-4xl leading-[0.95] tracking-[-0.055em] sm:text-6xl lg:top-0 lg:text-7xl"
         >
           <span className="font-display lg:hidden">How it works</span>
           <svg
