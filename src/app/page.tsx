@@ -185,14 +185,6 @@ export default function Home() {
       </section>
 
 <section id="why-flare" className="relative bg-background-deep overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 w-[140%] h-[140%] opacity-[0.09]" style={{ maskImage: 'radial-gradient(ellipse 60% 50% at 80% 70%, black 20%, transparent 80%)', transform: 'translateX(400px) translateY(100px) scale(2.5)', transformOrigin: 'bottom right' }}>
-          <Image
-            src="/bridge.png"
-            alt=""
-            fill
-            className="object-contain object-right-bottom"
-          />
-        </div>
         <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">Why Flare</p>
@@ -215,14 +207,6 @@ export default function Home() {
       </section>
 
       <section id="faq" className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10 overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 w-[45%] opacity-[0.10]">
-          <Image
-            src="/faq-engraving.svg"
-            alt=""
-            fill
-            className="object-contain object-right"
-          />
-        </div>
         <div className="max-w-2xl">
           <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">FAQ</p>
           <h2 className="font-display mt-4 text-4xl tracking-[-0.045em] sm:text-5xl">
