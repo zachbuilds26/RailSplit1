@@ -184,7 +184,15 @@ export default function Home() {
         </ol>
       </section>
 
-<section id="why-flare" className="border-y border-line bg-background-deep">
+<section id="why-flare" className="relative border-y border-line bg-background-deep overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 opacity-[0.11]" style={{ maskImage: 'linear-gradient(to left, black 20%, transparent 80%)', transform: 'translateX(350px) translateY(60px) scale(2)', transformOrigin: 'bottom right' }}>
+          <Image
+            src="/bridge.png"
+            alt=""
+            fill
+            className="object-contain object-right-bottom"
+          />
+        </div>
         <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">Why Flare</p>
