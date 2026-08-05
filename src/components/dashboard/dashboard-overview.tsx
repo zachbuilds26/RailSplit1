@@ -62,10 +62,7 @@ export function DashboardOverview() {
   const {
     links,
     payments,
-    hasMore,
     isLoading,
-    isLoadingMore,
-    loadMore,
     error,
     refetch,
   } = useMerchantLedger(address);
@@ -75,10 +72,8 @@ export function DashboardOverview() {
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [copyFailed, setCopyFailed] = useState(false);
   const [linksPage, setLinksPage] = useState(0);
-  const [paymentsPage, setPaymentsPage] = useState(0);
 
   const LINKS_PAGE_SIZE = 7;
-  const PAYMENTS_PAGE_SIZE = 5;
 
   const totals = useMemo(() => {
     const collectedUsdCents = links.reduce((sum, link) => sum + link.totalReceivedUsdCents, 0n);
@@ -97,10 +92,6 @@ export function DashboardOverview() {
     safeLinksPage * LINKS_PAGE_SIZE,
     safeLinksPage * LINKS_PAGE_SIZE + LINKS_PAGE_SIZE,
   );
-  const visiblePayments = payments.slice(
-    paymentsPage * PAYMENTS_PAGE_SIZE,
-    paymentsPage * PAYMENTS_PAGE_SIZE + PAYMENTS_PAGE_SIZE,
-  );
 
   function goPrevLinksPage() {
     setLinksPage((page) => Math.max(0, page - 1));
@@ -108,17 +99,6 @@ export function DashboardOverview() {
 
   function goNextLinksPage() {
     setLinksPage((page) => Math.min(linksTotalPages - 1, page + 1));
-  }
-
-  function goPrevPaymentsPage() {
-    setPaymentsPage((page) => Math.max(0, page - 1));
-  }
-
-  async function goNextPaymentsPage() {
-    if ((paymentsPage + 1) * PAYMENTS_PAGE_SIZE >= payments.length && hasMore) {
-      await loadMore();
-    }
-    setPaymentsPage((page) => page + 1);
   }
 
   async function copyLink(slug: string) {
@@ -458,6 +438,18 @@ export function DashboardOverview() {
                       </td>
                     </tr>
                   ))}
+                  {Array.from(
+                    { length: Math.max(0, LINKS_PAGE_SIZE - visibleLinks.length) },
+                    (_, index) => (
+                      <tr
+                        key={`filler-${index}`}
+                        aria-hidden="true"
+                        className="border-b border-line/70 last:border-0"
+                      >
+                        <td colSpan={4} className="px-5 py-4 sm:px-6">&nbsp;</td>
+                      </tr>
+                    ),
+                  )}
                 </tbody>
               </table>
             </div>
@@ -533,7 +525,7 @@ Recent settlements
 
           {payments.length > 0 && (
             <ul className="mt-6 divide-y divide-line">
-              {visiblePayments.map((payment) => (
+              {payments.map((payment) => (
                 <li
                   key={`${payment.linkId}-${payment.paidAt}`}
                   className="flex items-start justify-between gap-4 py-4 first:pt-0"
@@ -559,30 +551,6 @@ Recent settlements
                 </li>
               ))}
             </ul>
-          )}
-
-          {payments.length > PAYMENTS_PAGE_SIZE && (
-            <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4">
-              <p className="text-xs text-muted tabular-nums">Page {paymentsPage + 1}</p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={goPrevPaymentsPage}
-                  disabled={paymentsPage === 0 || isLoadingMore}
-                  className="border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={goNextPaymentsPage}
-                  disabled={(paymentsPage + 1) * PAYMENTS_PAGE_SIZE >= payments.length && !hasMore}
-                  className="border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {isLoadingMore ? "Loading…" : "Next"}
-                </button>
-              </div>
-            </div>
           )}
         </section>
       </div>

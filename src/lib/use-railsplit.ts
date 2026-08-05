@@ -248,23 +248,10 @@ type ContractPayment = {
  * Links can be queried directly by merchant, which keeps the dashboard from
  * pulling the entire chain just to render one wallet's view. Settlement
  * history is walked backward from the newest global payment in bounded pages
- * until the latest fifty for this merchant are found; the merchant can load
- * more with `loadMore`, which continues the walk from where it stopped.
+ * until the latest five for this merchant are found.
  */
 export function useMerchantLedger(merchantAddress?: `0x${string}`) {
   const client = usePublicClient({ chainId: railsplitChain.id });
-  const [scopedAddress, setScopedAddress] = useState(merchantAddress ?? null);
-  const [cursor, setCursor] = useState({ offset: 0n, hasMore: false });
-  const [extraPayments, setExtraPayments] = useState<SettlementEvent[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  // Switch to a different merchant resets the continuation cursor and any
-  // payments loaded past the first page.
-  if ((merchantAddress ?? null) !== scopedAddress) {
-    setScopedAddress(merchantAddress ?? null);
-    setCursor({ offset: 0n, hasMore: false });
-    setExtraPayments([]);
-  }
 
   const query = useQuery({
     queryKey: ["railsplit-ledger", RAILSPLIT_PAY_ADDRESS, merchantAddress ?? "none"],
@@ -281,7 +268,6 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
       })) as bigint;
 
       if (merchantLinkTotal === 0n) {
-        setCursor({ offset: 0n, hasMore: false });
         return { links: [], payments: [] };
       }
 
@@ -328,84 +314,38 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
       }));
 
       const linkById = new Map(links.map((link) => [link.linkId, link] as const));
-      const page = await scanPayments(client, linkById, 0n, paymentTotal);
-      setCursor({ offset: page.nextOffset, hasMore: page.hasMore });
+      const payments = await scanPayments(client, linkById, paymentTotal);
 
-      return { links, payments: page.payments };
+      return { links, payments };
     },
   });
 
-  async function loadMore() {
-    if (!client || !merchantAddress || isLoadingMore) return;
-    if (!cursor.hasMore) return;
-
-    setIsLoadingMore(true);
-    try {
-      const linkById = new Map(
-        (query.data?.links ?? []).map((link) => [link.linkId, link] as const),
-      );
-      const page = await scanPayments(client, linkById, cursor.offset);
-      setCursor({ offset: page.nextOffset, hasMore: page.hasMore });
-
-      setExtraPayments((previous) => {
-        const seen = new Set(previous.map((payment) => `${payment.linkId}-${payment.paidAt}`));
-        return [
-          ...previous,
-          ...page.payments.filter(
-            (payment) => !seen.has(`${payment.linkId}-${payment.paidAt}`),
-          ),
-        ];
-      });
-    } catch {
-      // The periodic refetch retries on its own; the button stays enabled.
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }
-
-  const payments = (() => {
-    const base = query.data?.payments ?? [];
-    if (extraPayments.length === 0) return base;
-
-    const seen = new Set<string>();
-    return [...base, ...extraPayments].filter((payment) => {
-      const key = `${payment.linkId}-${payment.paidAt}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  })();
-
   return {
     links: query.data?.links ?? [],
-    payments,
-    hasMore: cursor.hasMore,
+    payments: query.data?.payments ?? [],
     isLoading: query.isLoading,
-    isLoadingMore,
-    loadMore,
     error: query.error,
     refetch: query.refetch,
   };
 }
 
 const PAYMENTS_PER_PAGE = 50n;
-const PAYMENTS_COLLECT_LIMIT = 50;
+const PAYMENTS_COLLECT_LIMIT = 5;
 const MAX_PAGES = 10;
 
 /**
- * Walks the global payments array backward from `fromOffset` (newest first)
- * collecting up to `PAYMENTS_COLLECT_LIMIT` payments that belong to links in
- * `linkById`, bounded to `MAX_PAGES` RPC reads so a refetch or a "load more"
- * click cannot fan out into an unbounded number of calls.
+ * Walks the global payments array backward from the newest, collecting up to
+ * `PAYMENTS_COLLECT_LIMIT` payments that belong to links in `linkById`. The
+ * walk is bounded to `MAX_PAGES` RPC reads so a dashboard refetch cannot fan
+ * out into an unbounded number of calls as unrelated payments accumulate.
  */
 async function scanPayments(
   client: PublicClient,
   linkById: Map<`0x${string}`, MerchantLink>,
-  fromOffset: bigint,
   paymentTotal?: bigint,
 ) {
   const payments: SettlementEvent[] = [];
-  let offset = fromOffset;
+  let offset = 0n;
   let pagesRead = 0;
   const total =
     paymentTotal ??
@@ -449,7 +389,7 @@ async function scanPayments(
     offset += BigInt(rawPayments.length);
   }
 
-  return { payments, nextOffset: offset, hasMore: offset < total };
+  return payments;
 }
 
 /** Reads the live FLR/USD feed straight from the contract. */
