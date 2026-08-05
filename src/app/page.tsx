@@ -121,7 +121,7 @@ export default function Home() {
 
         <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pb-12 pt-12 text-center sm:px-8 sm:pb-16 lg:px-10 lg:pt-24">
           <p className="inline-flex items-center gap-2 border border-line bg-background-deep/70 px-2.5 py-1 text-[10px] font-semibold tracking-[0.15em] text-muted uppercase">
-            <span className="size-1.5 bg-accent" />
+            <span className="size-1.5 bg-accent animate-pulse" />
             Live on {railsplitChain.name}
           </p>
           <h1 className="font-display mt-7 max-w-3xl text-5xl leading-[0.92] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
@@ -185,7 +185,7 @@ export default function Home() {
       </section>
 
 <section id="why-flare" className="relative bg-background-deep overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 w-full h-full opacity-[0.09]" style={{ maskImage: 'radial-gradient(ellipse 70% 80% at 90% 60%, black 5%, transparent 70%)', transform: 'translateX(350px) translateY(40px) scale(0.55)', transformOrigin: 'bottom right' }}>
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 w-full h-full opacity-[0.40]" style={{ maskImage: 'radial-gradient(ellipse 70% 80% at 90% 60%, black 5%, transparent 70%)', transform: 'translateX(350px) translateY(40px) scale(0.55)', transformOrigin: 'bottom right' }}>
           <Image
             src="/ques.png"
             alt=""
