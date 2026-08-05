@@ -25,7 +25,6 @@ export const metadata: Metadata = {
     title: "RailSplit",
     description:
       "RailSplit helps merchants publish a clear dollar-priced checkout link and settle directly on Flare.",
-    url: "https://railsplit.com",
     siteName: "RailSplit",
     type: "website",
     locale: "en_US",

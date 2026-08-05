@@ -41,3 +41,11 @@ yarn-error.log*
 next-env.d.ts
 
 data/
+
+# local verification and demo artifacts
+video-output/
+verify-*.png
+*-price-check.png
+hero-check*.png
+Screenshot*.png
+make-railsplit-*.mjs

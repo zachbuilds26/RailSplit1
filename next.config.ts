@@ -8,10 +8,17 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Hand-optimised art is served as-is, so it can be cached hard.
-        source: "/:file(.*\\.webp)",
+        // Baseline hardening that cannot break rendering: no script or style
+        // restrictions are imposed, only framing, base URLs, and form targets.
+        source: "/:path*",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+          },
         ],
       },
     ];

@@ -87,16 +87,6 @@ export function usePaymentQuote(slug: string, enabled = true) {
   };
 }
 
-/** Total number of links on the contract. */
-export function useLinkCount() {
-  const query = useReadContract({
-    ...contract,
-    functionName: "linkCount",
-  });
-
-  return { count: query.data as bigint | undefined, isLoading: query.isLoading };
-}
-
 /**
  * Sends a payment.
  *
@@ -321,7 +311,15 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
       let paymentOffset = 0n;
       let paymentHistoryCapped = false;
 
-      while (paymentOffset < paymentTotal && payments.length < 50) {
+      // Walk the global payments array backward from the newest until this
+      // merchant's last 50 are found. The scan is bounded so a dashboard
+      // refetch cannot turn into an unbounded number of RPC calls as unrelated
+      // payments accumulate on the contract.
+      const MAX_PAGES = 10;
+      let pagesRead = 0;
+
+      while (paymentOffset < paymentTotal && payments.length < 50 && pagesRead < MAX_PAGES) {
+        pagesRead += 1;
         const pageLimit = paymentTotal - paymentOffset < 50n ? paymentTotal - paymentOffset : 50n;
         const [rawPayments, paymentSlugs] = (await client.readContract({
           address: RAILSPLIT_PAY_ADDRESS,
@@ -354,7 +352,7 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
         paymentOffset += BigInt(rawPayments.length);
       }
 
-      if (payments.length >= 50 && paymentOffset < paymentTotal) {
+      if ((payments.length >= 50 || pagesRead >= MAX_PAGES) && paymentOffset < paymentTotal) {
         paymentHistoryCapped = true;
       }
 

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { RailsplitLogo } from "@/components/ui/railsplit-logo";
+import { TypewriterTagline } from "@/components/landing/typewriter-tagline";
 import { explorerAddress, railsplitChain, shortenAddress } from "@/lib/chain";
 import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
 
@@ -151,7 +152,7 @@ export default function Home() {
       <section id="workflow" className="relative mx-auto min-h-[560px] max-w-7xl px-5 py-20 sm:px-8 lg:px-10 overflow-hidden">
         <h2
           aria-label="How it works"
-          className="absolute inset-x-0 top-[6%] z-0 px-5 text-center text-4xl leading-[0.95] tracking-[-0.055em] sm:text-6xl lg:top-0 lg:text-7xl"
+          className="absolute inset-x-0 top-[6%] z-0 px-5 text-center text-2xl leading-[0.95] tracking-[-0.055em] sm:text-4xl lg:top-0"
         >
           <span className="font-display lg:hidden">How it works</span>
           <svg
@@ -165,8 +166,8 @@ export default function Home() {
             <text
               className="font-display"
               fill="currentColor"
-              fontSize="88"
-              letterSpacing="-4"
+              fontSize="64"
+              letterSpacing="-3"
             >
               <textPath href="#workflow-arc" startOffset="50%" textAnchor="middle">
                 How it works
@@ -184,6 +185,9 @@ export default function Home() {
             unoptimized
             className="w-full h-auto"
           />
+        </div>
+        <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center">
+          <TypewriterTagline />
         </div>
       </section>
 
