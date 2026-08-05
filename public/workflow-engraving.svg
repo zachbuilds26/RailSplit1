@@ -10,31 +10,8 @@
       <rect width="5" height="5" fill="url(#hatch)"/>
       <rect width="5" height="5" fill="url(#hatch-2)"/>
     </pattern>
-    <mask id="fade-all">
-      <rect width="1200" height="800" fill="black"/>
-      <rect x="0" y="0" width="120" height="800" fill="url(#left-fade)"/>
-      <rect x="1080" y="0" width="120" height="800" fill="url(#right-fade)"/>
-      <rect x="0" y="0" width="1200" height="60" fill="url(#top-fade)"/>
-      <rect x="0" y="740" width="1200" height="60" fill="url(#bottom-fade)"/>
-    </mask>
-    <linearGradient id="left-fade" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="black"/>
-      <stop offset="1" stop-color="white"/>
-    </linearGradient>
-    <linearGradient id="right-fade" x1="1" y1="0" x2="0" y2="0">
-      <stop offset="0" stop-color="black"/>
-      <stop offset="1" stop-color="white"/>
-    </linearGradient>
-    <linearGradient id="top-fade" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="black"/>
-      <stop offset="1" stop-color="white"/>
-    </linearGradient>
-    <linearGradient id="bottom-fade" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0" stop-color="black"/>
-      <stop offset="1" stop-color="white"/>
-    </linearGradient>
   </defs>
-  <g mask="url(#fade-all)">
+  <g>
     <!-- Document 01 - Invoice (behind, -8deg rotation) -->
     <g transform="translate(720, 240) rotate(-8)">
       <rect x="0" y="0" width="300" height="200" rx="4" fill="none" stroke="#F5F5F5" stroke-width="1" fill="url(#crosshatch)" fill-opacity="0.12"/>
