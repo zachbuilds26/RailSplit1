@@ -2,7 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { formatEther, keccak256, parseEventLogs, stringToHex } from "viem";
+import {
+  formatEther,
+  keccak256,
+  parseEventLogs,
+  stringToHex,
+  type PublicClient,
+} from "viem";
 import {
   useAccount,
   usePublicClient,
@@ -240,10 +246,25 @@ type ContractPayment = {
  * Reads the connected merchant's payment links and settled payments.
  *
  * Links can be queried directly by merchant, which keeps the dashboard from
- * pulling the entire chain just to render one wallet's view.
+ * pulling the entire chain just to render one wallet's view. Settlement
+ * history is walked backward from the newest global payment in bounded pages
+ * until the latest fifty for this merchant are found; the merchant can load
+ * more with `loadMore`, which continues the walk from where it stopped.
  */
 export function useMerchantLedger(merchantAddress?: `0x${string}`) {
   const client = usePublicClient({ chainId: railsplitChain.id });
+  const [scopedAddress, setScopedAddress] = useState(merchantAddress ?? null);
+  const [cursor, setCursor] = useState({ offset: 0n, hasMore: false });
+  const [extraPayments, setExtraPayments] = useState<SettlementEvent[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Switch to a different merchant resets the continuation cursor and any
+  // payments loaded past the first page.
+  if ((merchantAddress ?? null) !== scopedAddress) {
+    setScopedAddress(merchantAddress ?? null);
+    setCursor({ offset: 0n, hasMore: false });
+    setExtraPayments([]);
+  }
 
   const query = useQuery({
     queryKey: ["railsplit-ledger", RAILSPLIT_PAY_ADDRESS, merchantAddress ?? "none"],
@@ -260,7 +281,8 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
       })) as bigint;
 
       if (merchantLinkTotal === 0n) {
-        return { links: [], payments: [], paymentHistoryCapped: false };
+        setCursor({ offset: 0n, hasMore: false });
+        return { links: [], payments: [] };
       }
 
       const [merchantLinkIds, paymentTotal] = await Promise.all([
@@ -280,7 +302,6 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
           functionName: "paymentCount",
         }) as Promise<bigint>,
       ]);
-
 
       const rawLinks = await Promise.all(
         merchantLinkIds.map((linkId) =>
@@ -307,67 +328,128 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
       }));
 
       const linkById = new Map(links.map((link) => [link.linkId, link] as const));
-      const payments: SettlementEvent[] = [];
-      let paymentOffset = 0n;
-      let paymentHistoryCapped = false;
+      const page = await scanPayments(client, linkById, 0n, paymentTotal);
+      setCursor({ offset: page.nextOffset, hasMore: page.hasMore });
 
-      // Walk the global payments array backward from the newest until this
-      // merchant's last 50 are found. The scan is bounded so a dashboard
-      // refetch cannot turn into an unbounded number of RPC calls as unrelated
-      // payments accumulate on the contract.
-      const MAX_PAGES = 10;
-      let pagesRead = 0;
-
-      while (paymentOffset < paymentTotal && payments.length < 50 && pagesRead < MAX_PAGES) {
-        pagesRead += 1;
-        const pageLimit = paymentTotal - paymentOffset < 50n ? paymentTotal - paymentOffset : 50n;
-        const [rawPayments, paymentSlugs] = (await client.readContract({
-          address: RAILSPLIT_PAY_ADDRESS,
-          abi: RAILSPLIT_PAY_ABI,
-          functionName: "getPayments",
-          args: [paymentOffset, pageLimit],
-        })) as readonly [readonly ContractPayment[], readonly string[], bigint];
-
-        if (rawPayments.length === 0) break;
-
-        for (let index = 0; index < rawPayments.length && payments.length < 50; index++) {
-          const payment = rawPayments[index];
-          const link = linkById.get(payment.linkId);
-          if (!link) continue;
-
-          const slug = paymentSlugs[index] ?? link.slug;
-          payments.push({
-            linkId: link.linkId,
-            slug,
-            title: link.title,
-            payer: payment.payer,
-            amountWei: payment.amountWei,
-            priceUsdCents: payment.priceUsdCents,
-            paidAt: payment.paidAt,
-            flrUsdPrice: payment.flrUsdPrice,
-            flrUsdDecimals: Number(payment.flrUsdDecimals),
-          });
-        }
-
-        paymentOffset += BigInt(rawPayments.length);
-      }
-
-      if ((payments.length >= 50 || pagesRead >= MAX_PAGES) && paymentOffset < paymentTotal) {
-        paymentHistoryCapped = true;
-      }
-
-      return { links, payments, paymentHistoryCapped };
+      return { links, payments: page.payments };
     },
   });
 
+  async function loadMore() {
+    if (!client || !merchantAddress || isLoadingMore) return;
+    if (!cursor.hasMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const linkById = new Map(
+        (query.data?.links ?? []).map((link) => [link.linkId, link] as const),
+      );
+      const page = await scanPayments(client, linkById, cursor.offset);
+      setCursor({ offset: page.nextOffset, hasMore: page.hasMore });
+
+      setExtraPayments((previous) => {
+        const seen = new Set(previous.map((payment) => `${payment.linkId}-${payment.paidAt}`));
+        return [
+          ...previous,
+          ...page.payments.filter(
+            (payment) => !seen.has(`${payment.linkId}-${payment.paidAt}`),
+          ),
+        ];
+      });
+    } catch {
+      // The periodic refetch retries on its own; the button stays enabled.
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
+
+  const payments = (() => {
+    const base = query.data?.payments ?? [];
+    if (extraPayments.length === 0) return base;
+
+    const seen = new Set<string>();
+    return [...base, ...extraPayments].filter((payment) => {
+      const key = `${payment.linkId}-${payment.paidAt}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  })();
+
   return {
     links: query.data?.links ?? [],
-    payments: query.data?.payments ?? [],
-    paymentHistoryCapped: query.data?.paymentHistoryCapped ?? false,
+    payments,
+    hasMore: cursor.hasMore,
     isLoading: query.isLoading,
+    isLoadingMore,
+    loadMore,
     error: query.error,
     refetch: query.refetch,
   };
+}
+
+const PAYMENTS_PER_PAGE = 50n;
+const PAYMENTS_COLLECT_LIMIT = 50;
+const MAX_PAGES = 10;
+
+/**
+ * Walks the global payments array backward from `fromOffset` (newest first)
+ * collecting up to `PAYMENTS_COLLECT_LIMIT` payments that belong to links in
+ * `linkById`, bounded to `MAX_PAGES` RPC reads so a refetch or a "load more"
+ * click cannot fan out into an unbounded number of calls.
+ */
+async function scanPayments(
+  client: PublicClient,
+  linkById: Map<`0x${string}`, MerchantLink>,
+  fromOffset: bigint,
+  paymentTotal?: bigint,
+) {
+  const payments: SettlementEvent[] = [];
+  let offset = fromOffset;
+  let pagesRead = 0;
+  const total =
+    paymentTotal ??
+    ((await client.readContract({
+      address: RAILSPLIT_PAY_ADDRESS,
+      abi: RAILSPLIT_PAY_ABI,
+      functionName: "paymentCount",
+    })) as bigint);
+
+  while (offset < total && payments.length < PAYMENTS_COLLECT_LIMIT && pagesRead < MAX_PAGES) {
+    pagesRead += 1;
+    const pageLimit = total - offset < PAYMENTS_PER_PAGE ? total - offset : PAYMENTS_PER_PAGE;
+    const [rawPayments, paymentSlugs] = (await client.readContract({
+      address: RAILSPLIT_PAY_ADDRESS,
+      abi: RAILSPLIT_PAY_ABI,
+      functionName: "getPayments",
+      args: [offset, pageLimit],
+    })) as readonly [readonly ContractPayment[], readonly string[], bigint];
+
+    if (rawPayments.length === 0) break;
+
+    for (let index = 0; index < rawPayments.length && payments.length < PAYMENTS_COLLECT_LIMIT; index++) {
+      const payment = rawPayments[index];
+      const link = linkById.get(payment.linkId);
+      if (!link) continue;
+
+      const slug = paymentSlugs[index] ?? link.slug;
+      payments.push({
+        linkId: link.linkId,
+        slug,
+        title: link.title,
+        payer: payment.payer,
+        amountWei: payment.amountWei,
+        priceUsdCents: payment.priceUsdCents,
+        paidAt: payment.paidAt,
+        flrUsdPrice: payment.flrUsdPrice,
+        flrUsdDecimals: Number(payment.flrUsdDecimals),
+      });
+    }
+
+    offset += BigInt(rawPayments.length);
+  }
+
+  return { payments, nextOffset: offset, hasMore: offset < total };
 }
 
 /** Reads the live FLR/USD feed straight from the contract. */

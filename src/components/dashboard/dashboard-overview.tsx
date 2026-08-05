@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { Icon } from "@/components/ui/icon";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { explorerAddress, railsplitChain, shortenAddress } from "@/lib/chain";
 import { formatReadError } from "@/lib/railsplit-errors";
@@ -58,7 +59,16 @@ function formatSettlementAge(now: bigint | undefined, paidAt: bigint) {
 
 export function DashboardOverview() {
   const { address } = useAccount();
-  const { links, payments, paymentHistoryCapped, isLoading, error, refetch } = useMerchantLedger(address);
+  const {
+    links,
+    payments,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    loadMore,
+    error,
+    refetch,
+  } = useMerchantLedger(address);
   const feed = useFlrUsdFeed();
   const feedAge = useFeedAge(feed.timestamp);
   const now = useNow();
@@ -241,24 +251,40 @@ export function DashboardOverview() {
           <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
             Settled
           </p>
-          <p className="price-figure mt-5 text-xl sm:text-2xl">
-            {formatUsdCents(totals.collectedUsdCents)}
-          </p>
-          <p className="mt-2 text-xs text-muted tabular-nums">
-            {formatCoin(totals.collectedWei, 2)} {railsplitChain.nativeCurrency.symbol} settled
-          </p>
+          {isLoading ? (
+            <Skeleton className="mt-5 h-8 w-28" />
+          ) : (
+            <p className="price-figure mt-5 text-xl sm:text-2xl">
+              {formatUsdCents(totals.collectedUsdCents)}
+            </p>
+          )}
+          {isLoading ? (
+            <Skeleton className="mt-2 h-3 w-40" />
+          ) : (
+            <p className="mt-2 text-xs text-muted tabular-nums">
+              {formatCoin(totals.collectedWei, 2)} {railsplitChain.nativeCurrency.symbol} settled
+            </p>
+          )}
         </article>
 
         <article className="bg-surface p-5">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
             Open links
           </p>
-          <p className="price-figure mt-5 text-xl sm:text-2xl">
-            {String(totals.active).padStart(2, "0")}
-          </p>
-          <p className="mt-2 text-xs text-muted">
-            {links.length} created
-          </p>
+          {isLoading ? (
+            <Skeleton className="mt-5 h-8 w-14" />
+          ) : (
+            <p className="price-figure mt-5 text-xl sm:text-2xl">
+              {String(totals.active).padStart(2, "0")}
+            </p>
+          )}
+          {isLoading ? (
+            <Skeleton className="mt-2 h-3 w-20" />
+          ) : (
+            <p className="mt-2 text-xs text-muted">
+              {links.length} created
+            </p>
+          )}
         </article>
 
         <article className="bg-surface p-5">
@@ -270,16 +296,20 @@ export function DashboardOverview() {
               <span className="text-[10px] text-muted tabular-nums">{feedAge}s</span>
             )}
           </div>
-          <p className="price-figure mt-5 text-lg sm:text-xl">
-            {feed.isLoading ? "—" : feed.error ? "—" : formatFeedPrice(feed.value, feed.decimals)}
-          </p>
-          <p className="mt-2 text-xs text-muted">
-            {feed.error
-              ? "Feed unavailable"
-              : feed.isLoading
-                ? "Reading the feed…"
-                : "Updated from the live feed"}
-          </p>
+          {feed.isLoading ? (
+            <Skeleton className="mt-5 h-7 w-32" />
+          ) : (
+            <p className="price-figure mt-5 text-lg sm:text-xl">
+              {feed.error ? "—" : formatFeedPrice(feed.value, feed.decimals)}
+            </p>
+          )}
+          {feed.isLoading ? (
+            <Skeleton className="mt-2 h-3 w-28" />
+          ) : (
+            <p className="mt-2 text-xs text-muted">
+              {feed.error ? "Feed unavailable" : "Updated from the live feed"}
+            </p>
+          )}
         </article>
       </section>
 
@@ -304,7 +334,25 @@ export function DashboardOverview() {
           </div>
 
           {isLoading && (
-            <p role="status" aria-live="polite" className="p-6 text-sm text-muted">Loading payment links from Flare…</p>
+            <div role="status" aria-live="polite" className="p-6">
+              <p className="sr-only">Loading payment links from Flare…</p>
+              <div aria-hidden="true" className="flex flex-col gap-5">
+                {Array.from({ length: 3 }, (_, index) => (
+                  <div key={index} className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <Skeleton className="h-4 w-44" />
+                      <Skeleton className="mt-2 h-3 w-28" />
+                    </div>
+                    <Skeleton className="h-5 w-16 shrink-0" />
+                    <Skeleton className="h-4 w-14 shrink-0" />
+                    <div className="flex gap-2">
+                      <Skeleton className="size-8" />
+                      <Skeleton className="size-8" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           {!isLoading && links.length === 0 && (
@@ -392,13 +440,34 @@ export function DashboardOverview() {
           <h2 id="activity-title" className="mt-1 text-base font-medium">
 Recent settlements
           </h2>
-          {paymentHistoryCapped && (
+          {hasMore && (
             <p className="mt-2 text-xs leading-5 text-muted">
               Showing this merchant&apos;s recent settlements only so the feed stays responsive.
             </p>
           )}
 
-          {isLoading && <p className="mt-6 text-sm text-muted">Reading events…</p>}
+          {isLoading && (
+            <>
+              <p role="status" aria-live="polite" className="sr-only">
+                Reading settlement history…
+              </p>
+              <ul aria-hidden="true" className="mt-6 divide-y divide-line">
+                {Array.from({ length: 3 }, (_, index) => (
+                  <li key={index} className="flex items-start justify-between gap-4 py-4 first:pt-0">
+                    <div className="min-w-0 flex-1">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="mt-2 h-3 w-32" />
+                      <Skeleton className="mt-2 h-2.5 w-20" />
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <Skeleton className="ml-auto h-4 w-14" />
+                      <Skeleton className="mt-2 ml-auto h-3 w-24" />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
 
           {!isLoading && payments.length === 0 && (
             <p className="mt-6 text-sm leading-6 text-muted">
@@ -434,6 +503,17 @@ Recent settlements
                 </li>
               ))}
             </ul>
+          )}
+
+          {payments.length > 0 && hasMore && (
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={isLoadingMore}
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 border border-line px-4 py-2.5 text-xs font-semibold text-muted hover:border-line-strong hover:text-ink disabled:cursor-wait disabled:opacity-60"
+            >
+              {isLoadingMore ? "Loading more…" : "Load more settlements"}
+            </button>
           )}
         </section>
       </div>
