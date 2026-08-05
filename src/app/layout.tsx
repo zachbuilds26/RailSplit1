@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "RailSplit",
   description:
     "RailSplit helps merchants publish a clear dollar-priced checkout link and settle directly on Flare.",
+  icons: {
+    icon: "/RailSplit_logo_transparent.png",
+  },
 };
 
 export default function RootLayout({
