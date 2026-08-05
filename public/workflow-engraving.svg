@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <defs>
+    <pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="4" stroke="#F5F5F5" stroke-width="0.4" opacity="0.5"/>
+    </pattern>
+    <pattern id="hatch-2" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+      <line x1="0" y1="0" x2="0" y2="3" stroke="#F5F5F5" stroke-width="0.3" opacity="0.4"/>
+    </pattern>
+    <pattern id="crosshatch" width="5" height="5" patternUnits="userSpaceOnUse">
+      <rect width="5" height="5" fill="url(#hatch)"/>
+      <rect width="5" height="5" fill="url(#hatch-2)"/>
+    </pattern>
+    <mask id="fade-all">
+      <rect width="1200" height="800" fill="white"/>
+      <rect x="0" y="0" width="100" height="800" fill="url(#left-fade)"/>
+      <rect x="1100" y="0" width="100" height="800" fill="url(#right-fade)"/>
+      <rect x="0" y="0" width="1200" height="80" fill="url(#top-fade)"/>
+      <rect x="0" y="720" width="1200" height="80" fill="url(#bottom-fade)"/>
+    </mask>
+    <linearGradient id="left-fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="black"/>
+      <stop offset="1" stop-color="white"/>
+    </linearGradient>
+    <linearGradient id="right-fade" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="black"/>
+      <stop offset="1" stop-color="white"/>
+    </linearGradient>
+    <linearGradient id="top-fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="black"/>
+      <stop offset="1" stop-color="white"/>
+    </linearGradient>
+    <linearGradient id="bottom-fade" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="black"/>
+      <stop offset="1" stop-color="white"/>
+    </linearGradient>
+  </defs>
+  <g mask="url(#fade-all)">
+    <!-- Card 1 - Top (Set the price) - rotated -8deg -->
+    <g transform="translate(680, 280) rotate(-8)">
+      <rect x="0" y="0" width="320" height="220" rx="16" fill="none" stroke="#F5F5F5" stroke-width="1.2" fill="url(#crosshatch)" fill-opacity="0.15"/>
+      <rect x="0" y="0" width="320" height="220" rx="16" fill="none" stroke="#F5F5F5" stroke-width="0.8"/>
+      <line x1="20" y1="30" x2="300" y2="30" stroke="#F5F5F5" stroke-width="0.5"/>
+      <text x="20" y="22" font-family="serif" font-size="10" fill="#F5F5F5" opacity="0.8">SET THE PRICE</text>
+      <rect x="20" y="45" width="280" height="50" rx="8" fill="none" stroke="#F5F5F5" stroke-width="0.6"/>
+      <text x="30" y="78" font-family="serif" font-size="28" fill="#F5F5F5" font-weight="bold">$125.00</text>
+      <text x="30" y="95" font-family="serif" font-size="8" fill="#F5F5F5" opacity="0.6">USD</text>
+      <line x1="20" y1="110" x2="300" y2="110" stroke="#F5F5F5" stroke-width="0.3" stroke-dasharray="2,2"/>
+      <rect x="20" y="120" width="280" height="35" rx="6" fill="none" stroke="#F5F5F5" stroke-width="0.5"/>
+      <text x="30" y="142" font-family="serif" font-size="9" fill="#F5F5F5" opacity="0.7">Currency: USD</text>
+      <rect x="20" y="162" width="280" height="35" rx="6" fill="none" stroke="#F5F5F5" stroke-width="0.5"/>
+      <text x="30" y="184" font-family="serif" font-size="9" fill="#F5F5F5" opacity="0.7">Generate Payment Link</text>
+      <line x1="0" y1="220" x2="320" y2="220" stroke="#F5F5F5" stroke-width="0.3"/>
+    </g>
+    <!-- Card 2 - Middle (Share one link) - rotated 0deg -->
+    <g transform="translate(550, 320) rotate(0)">
+      <rect x="0" y="0" width="360" height="260" rx="16" fill="none" stroke="#F5F5F5" stroke-width="1.2" fill="url(#crosshatch)" fill-opacity="0.15"/>
+      <rect x="0" y="0" width="360" height="260" rx="16" fill="none" stroke="#F5F5F5" stroke-width="0.8"/>
+      <line x1="20" y1="30" x2="340" y2="30" stroke="#F5F5F5" stroke-width="0.5"/>
+      <text x="20" y="22" font-family="serif" font-size="10" fill="#F5F5F5" opacity="0.8">SHARE ONE LINK</text>
+      <rect x="20" y="45" width="320" height="55" rx="8" fill="none" stroke="#F5F5F5" stroke-width="0.6"/>
+      <text x="30" y="68" font-family="monospace" font-size="11" fill="#F5F5F5" opacity="0.8">https://railsplit.app/pay/</text>
+      <text x="30" y="85" font-family="monospace" font-size="9" fill="#F5F5F5" opacity="0.5">arcade-run-001</text>
+      <rect x="280" y="52" width="40" height="28" rx="4" fill="none" stroke="#F5F5F5" stroke-width="0.4"/>
+      <line x1="290" y1="62" x2="305" y2="62" stroke="#F5F5F5" stroke-width="0.3"/>
+      <line x1="290" y1="66" x2="305" y2="66" stroke="#F5F5F5" stroke-width="0.3"/>
+      <line x1="290" y1="70" x2="305" y2="70" stroke="#F5F5F5" stroke-width="0.3"/>
+      <line x1="20" y1="115" x2="340" y2="115" stroke="#F5F5F5" stroke-width="0.3" stroke-dasharray="2,2"/>
+      <rect x="20" y="125" width="320" height="40" rx="6" fill="none" stroke="#F5F5F5" stroke-width="0.4"/>
+      <text x="30" y="150" font-family="serif" font-size="9" fill="#F5F5F5" opacity="0.5">Copy link to clipboard</text>
+      <line x1="0" y1="260" x2="360" y2="260" stroke="#F5F5F5" stroke-width="0.3"/>
+    </g>
+    <!-- Card 3 - Bottom (Settlement Complete) - rotated +9deg -->
+    <g transform="translate(420, 370) rotate(9)">
+      <rect x="0" y="0" width="340" height="240" rx="16" fill="none" stroke="#F5F5F5" stroke-width="1.2" fill="url(#crosshatch)" fill-opacity="0.15"/>
+      <rect x="0" y="0" width="340" height="240" rx="16" fill="none" stroke="#F5F5F5" stroke-width="0.8"/>
+      <line x1="20" y1="30" x2="320" y2="30" stroke="#F5F5F5" stroke-width="0.5"/>
+      <text x="20" y="22" font-family="serif" font-size="10" fill="#F5F5F5" opacity="0.8">SETTLEMENT COMPLETE</text>
+      <circle cx="50" cy="65" r="18" fill="none" stroke="#F5F5F5" stroke-width="0.8"/>
+      <path d="M38,65 L46,73 L62,55" fill="none" stroke="#F5F5F5" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="80" y="70" font-family="serif" font-size="14" fill="#F5F5F5" font-weight="bold">Payment Confirmed</text>
+      <line x1="20" y1="95" x2="320" y2="95" stroke="#F5F5F5" stroke-width="0.3" stroke-dasharray="2,2"/>
+      <rect x="20" y="105" width="140" height="30" rx="4" fill="none" stroke="#F5F5F5" stroke-width="0.4"/>
+      <text x="30" y="124" font-family="serif" font-size="8" fill="#F5F5F5" opacity="0.6">Destination:</text>
+      <text x="30" y="138" font-family="monospace" font-size="8" fill="#F5F5F5" opacity="0.5">Merchant Wallet</text>
+      <rect x="170" y="105" width="150" height="30" rx="4" fill="none" stroke="#F5F5F5" stroke-width="0.4"/>
+      <text x="180" y="124" font-family="serif" font-size="8" fill="#F5F5F5" opacity="0.6">Status:</text>
+      <text x="180" y="138" font-family="serif" font-size="8" fill="#F5F5F5" opacity="0.8">Settled</text>
+      <rect x="20" y="145" width="300" height="30" rx="4" fill="none" stroke="#F5F5F5" stroke-width="0.4"/>
+      <text x="30" y="164" font-family="serif" font-size="8" fill="#F5F5F5" opacity="0.6">Amount:</text>
+      <text x="100" y="164" font-family="serif" font-size="10" fill="#F5F5F5" opacity="0.9">$125.00</text>
+      <line x1="0" y1="240" x2="340" y2="240" stroke="#F5F5F5" stroke-width="0.3"/>
+    </g>
+  </g>
+</svg>

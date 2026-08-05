@@ -163,7 +163,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="workflow" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
+      <section id="workflow" className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10 overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 z-0 w-[50%] opacity-[0.10]" style={{ maskImage: 'radial-gradient(ellipse 60% 70% at 80% 50%, black 10%, transparent 80%)' }}>
+          <Image
+            src="/workflow-engraving.svg"
+            alt=""
+            fill
+            className="object-contain object-right"
+          />
+        </div>
         <div className="max-w-2xl">
           <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">How it works</p>
           <h2 className="font-display mt-4 text-4xl leading-[0.94] tracking-[-0.045em] sm:text-5xl">
