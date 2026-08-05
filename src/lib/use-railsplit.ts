@@ -330,7 +330,7 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
 }
 
 const PAYMENTS_PER_PAGE = 50n;
-const PAYMENTS_COLLECT_LIMIT = 5;
+const PAYMENTS_COLLECT_LIMIT = 6;
 const MAX_PAGES = 10;
 
 /**
