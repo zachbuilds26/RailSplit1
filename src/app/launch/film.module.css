@@ -1,0 +1,795 @@
+.filmRoot {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #000000;
+  color: #ffffff;
+  font-family: var(--font-space-grotesk), Arial, sans-serif;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.display {
+  font-family: var(--font-syne), Arial, sans-serif;
+  font-weight: 800;
+}
+
+/* ------------------------------------------------------------------ */
+/* SCENE 1 — OPEN                                                      */
+/* ------------------------------------------------------------------ */
+
+.s1Rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 62%;
+  height: 1px;
+  background: #ffffff;
+  transform: scaleX(0);
+  transform-origin: center;
+  animation: launch-draw-center 1.6s cubic-bezier(0.45, 0, 0.55, 1) 0.5s both;
+}
+
+.s1Dot {
+  position: absolute;
+  top: calc(62% - 6px);
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  translate: -50% -50%;
+  animation: launch-dot-to-center 5s cubic-bezier(0.4, 0, 0.6, 1) 2s both;
+}
+
+@keyframes launch-dot-to-center {
+  from {
+    left: 0;
+  }
+  to {
+    left: 50%;
+  }
+}
+
+.s1Text {
+  position: absolute;
+  left: 50%;
+  top: 70%;
+  width: max-content;
+  max-width: 86vw;
+  translate: -50% 0;
+  font-size: clamp(20px, 3.4vw, 44px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  animation: launch-fade-in-out 8.4s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
+}
+
+@keyframes launch-fade-in-out {
+  0% {
+    opacity: 0;
+  }
+  8.3% {
+    opacity: 1;
+  }
+  77.4% {
+    opacity: 1;
+  }
+  82.1% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* SCENE 2 — THE TAX                                                   */
+/* ------------------------------------------------------------------ */
+
+.s2Rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 62%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.35);
+  animation: launch-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.s2Word {
+  position: absolute;
+  left: 8%;
+  top: 62%;
+  translate: 0 -50%;
+  font-size: clamp(72px, 13vw, 180px);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.s2Cycle {
+  animation: launch-word-cycle 2.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.s2CycleDelay1 {
+  animation-delay: 0.8s;
+}
+
+.s2CycleDelay2 {
+  animation-delay: 2.8s;
+}
+
+@keyframes launch-word-cycle {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  26.9% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  88.5% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+.s2Struck {
+  position: relative;
+  animation: launch-word-struck 4.2s cubic-bezier(0.16, 1, 0.3, 1) 4.8s both;
+}
+
+@keyframes launch-word-struck {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(1);
+  }
+  16.7% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  71.4% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  92.9% {
+    opacity: 0;
+    transform: translateY(-120px) scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) scale(0.7);
+  }
+}
+
+.s2Strike {
+  position: absolute;
+  left: -1%;
+  right: -1%;
+  top: 52%;
+  height: 1px;
+  background: #ffffff;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: launch-draw-left 0.9s cubic-bezier(0.45, 0, 0.55, 1) 6.8s both;
+}
+
+/* ------------------------------------------------------------------ */
+/* SCENE 3 — THE TOTEM                                                 */
+/* ------------------------------------------------------------------ */
+
+.s3Push {
+  position: absolute;
+  inset: 0;
+  animation: launch-push-in 8.5s linear 2s both;
+}
+
+@keyframes launch-push-in {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.02);
+  }
+}
+
+.s3Totem {
+  position: absolute;
+  left: 8%;
+  top: 34%;
+  animation: launch-totem-exit 1s cubic-bezier(0.33, 0, 0.66, 1) 8.6s both;
+}
+
+@keyframes launch-totem-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0.3;
+    transform: translateX(12%) scale(0.92);
+  }
+}
+
+.s3Line {
+  font-size: clamp(52px, 8.4vw, 110px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  animation: launch-slide-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.s3Line1 {
+  animation-delay: 1.6s;
+}
+
+.s3Line2 {
+  animation-delay: 2.1s;
+}
+
+.s3Line3 {
+  animation-delay: 2.6s;
+}
+
+@keyframes launch-slide-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.s3Rail {
+  position: absolute;
+  left: 8%;
+  top: calc(34% + 5.2em);
+  width: 38%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.6);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: launch-draw-left 1.6s cubic-bezier(0.45, 0, 0.55, 1) 3.6s both;
+}
+
+.s3Brand {
+  position: absolute;
+  left: 8%;
+  bottom: 8%;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.2);
+  animation: launch-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
+}
+
+/* ------------------------------------------------------------------ */
+/* SCENE 4 — THE LINK                                                  */
+/* ------------------------------------------------------------------ */
+
+.s4Grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: launch-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
+}
+
+.s4CardWrap {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  translate: -50% -50%;
+  width: min(420px, 86vw);
+  animation: launch-card-lift 0.9s cubic-bezier(0.33, 0, 0.66, 1) 12.8s both;
+}
+
+@keyframes launch-card-lift {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0.3;
+    transform: translateY(-60px);
+  }
+}
+
+.s4Card {
+  position: relative;
+  padding: 34px 34px 30px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  background: transparent;
+}
+
+.s4CardBorder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.s4CardBorder rect {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: launch-draw-stroke 0.9s cubic-bezier(0.45, 0, 0.55, 1) 1.6s both;
+}
+
+@keyframes launch-draw-stroke {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.s4Title {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  animation: launch-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 2.8s both;
+}
+
+.s4Price {
+  margin-top: 18px;
+  font-size: clamp(64px, 9vw, 96px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  animation: launch-slide-fade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 3.6s both;
+}
+
+.s4CoinRow {
+  position: relative;
+  margin-top: 14px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-variant-numeric: tabular-nums;
+  animation: launch-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 4.6s both;
+}
+
+.s4Tick {
+  display: inline-block;
+  animation: launch-tick 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes launch-tick {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.s4CoinUnderline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  transform: scaleX(0);
+  transform-origin: center;
+  animation: launch-draw-center 0.8s cubic-bezier(0.45, 0, 0.55, 1) 7.6s both;
+}
+
+.s4Pay {
+  margin-top: 28px;
+  width: 100%;
+  padding: 14px 0;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: transparent;
+  color: #ffffff;
+  font-family: var(--font-space-grotesk), Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: default;
+  animation: launch-scale-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 5.5s both;
+}
+
+@keyframes launch-scale-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* SCENE 5 — THE SETTLEMENT                                            */
+/* ------------------------------------------------------------------ */
+
+.s5Push {
+  position: absolute;
+  inset: 0;
+  animation: launch-push-in 11s linear 1s both;
+}
+
+.s5Rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.7);
+  transform: scaleX(0);
+  transform-origin: center;
+  animation: launch-draw-center 1.6s cubic-bezier(0.45, 0, 0.55, 1) 0.6s both;
+}
+
+.s5ConfirmLine {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 60px);
+  width: 1px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.25);
+  animation: launch-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1s both, launch-confirm-flash 0.3s linear 6.6s both;
+}
+
+@keyframes launch-confirm-flash {
+  0% {
+    background: rgba(255, 255, 255, 0.25);
+  }
+  33% {
+    background: #ffffff;
+  }
+  100% {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+.s5Dot {
+  position: absolute;
+  top: calc(50% - 6px);
+  left: 0;
+  width: 12px;
+  height: 12px;
+  translate: -50% -50%;
+  animation: launch-dot-cross 9.5s cubic-bezier(0.4, 0, 0.6, 1) 1.6s both;
+}
+
+@keyframes launch-dot-cross {
+  from {
+    left: 0;
+  }
+  to {
+    left: calc(100% - 12px);
+  }
+}
+
+.s5DotCore {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: launch-dot-arrive 0.3s cubic-bezier(0.16, 1, 0.3, 1) 11.1s both;
+}
+
+@keyframes launch-dot-arrive {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.67);
+  }
+}
+
+.s5Label {
+  position: absolute;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.s5LabelRate {
+  left: calc(50% + 24px);
+  top: calc(50% - 92px);
+  animation: launch-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.4s both;
+}
+
+.s5LabelWallet {
+  right: 8%;
+  bottom: 22%;
+  text-align: right;
+  animation: launch-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both;
+}
+
+.s5Surplus {
+  position: absolute;
+  left: 8%;
+  top: calc(50% + 28px);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  animation: launch-surplus 0.6s cubic-bezier(0.16, 1, 0.3, 1) 11.6s both;
+}
+
+@keyframes launch-surplus {
+  from {
+    opacity: 0;
+    letter-spacing: 0.1em;
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 0.28em;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* SCENE 6 — THE SYSTEM (inverted)                                     */
+/* ------------------------------------------------------------------ */
+
+.s6Stage {
+  background: #ffffff;
+  color: #000000;
+}
+
+.s6CardWrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: min(420px, 86vw);
+  animation: launch-card-drop 0.8s cubic-bezier(0.33, 0, 0.66, 1) 9.6s both;
+}
+
+@keyframes launch-card-drop {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(120px);
+  }
+}
+
+.s6Card {
+  padding: 34px 34px 12px;
+  border: 1px solid #000000;
+  border-radius: 24px;
+  animation: launch-scale-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both;
+}
+
+.s6Title {
+  font-size: clamp(36px, 5vw, 64px);
+  letter-spacing: 0.1em;
+  animation: launch-tracking-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 2s both;
+}
+
+@keyframes launch-tracking-fade {
+  from {
+    opacity: 0;
+    letter-spacing: 0.1em;
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 0.24em;
+  }
+}
+
+.s6Rows {
+  margin-top: 22px;
+}
+
+.s6Row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  animation: launch-slide-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.s6Row1 {
+  animation-delay: 3s;
+}
+
+.s6Row2 {
+  animation-delay: 3.4s;
+}
+
+.s6Row3 {
+  animation-delay: 3.8s;
+}
+
+.s6RowTitle {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s6RowAmount {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.s6Tag {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  border: 1px solid #000000;
+  padding: 3px 7px;
+  animation: launch-tracking-fade 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.s6Tag1 {
+  animation-delay: 3.3s;
+}
+
+.s6Tag2 {
+  animation-delay: 3.7s;
+}
+
+.s6Tag3 {
+  animation-delay: 4.1s;
+}
+
+/* ------------------------------------------------------------------ */
+/* SCENE 7 — THE PROMISE                                               */
+/* ------------------------------------------------------------------ */
+
+.s7Stack {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  text-align: center;
+  animation: launch-fade-out 0.7s cubic-bezier(0.33, 0, 0.66, 1) 8.2s both;
+}
+
+@keyframes launch-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.s7Word {
+  font-size: clamp(56px, 10vw, 140px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  animation: launch-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ------------------------------------------------------------------ */
+/* SCENE 8 — THE MARK                                                  */
+/* ------------------------------------------------------------------ */
+
+.s8Mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: min(760px, 92vw);
+  text-align: center;
+}
+
+.s8Wordmark {
+  font-size: clamp(48px, 8vw, 88px);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.s8Letter {
+  display: inline-block;
+  animation: launch-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.s8Tagline {
+  margin-top: 22px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+  animation: launch-fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 3.6s both;
+}
+
+.s8Rule {
+  margin: 26px auto 0;
+  width: 220px;
+  height: 1px;
+  background: #ffffff;
+  transform: scaleX(0);
+  transform-origin: center;
+  animation: launch-draw-center 0.8s cubic-bezier(0.45, 0, 0.55, 1) 4.6s both;
+}
+
+.s8Controls {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 80px);
+  translate: -50% 0;
+  display: flex;
+  gap: 16px;
+  animation: launch-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 6.5s both;
+}
+
+.s8Button {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 10px 20px;
+  background: transparent;
+  color: #ffffff;
+  font-family: var(--font-space-grotesk), Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.s8Button:hover,
+.s8Button:focus-visible {
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.s8Button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* SHARED                                                              */
+/* ------------------------------------------------------------------ */
+
+@keyframes launch-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes launch-draw-left {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes launch-draw-center {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filmRoot *,
+  .filmRoot *::before,
+  .filmRoot *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+}

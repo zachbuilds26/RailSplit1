@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Chakra_Petch, Space_Grotesk } from "next/font/google";
+import { Chakra_Petch, Space_Grotesk, Syne } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -11,6 +11,11 @@ const chakra = Chakra_Petch({
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
+
+const syne = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
 });
 
@@ -54,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${chakra.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${chakra.variable} ${spaceGrotesk.variable} ${syne.variable}`}>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
