@@ -74,6 +74,11 @@ export function DashboardOverview() {
   const now = useNow();
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [copyFailed, setCopyFailed] = useState(false);
+  const [linksPage, setLinksPage] = useState(0);
+  const [paymentsPage, setPaymentsPage] = useState(0);
+
+  const LINKS_PAGE_SIZE = 7;
+  const PAYMENTS_PAGE_SIZE = 5;
 
   const totals = useMemo(() => {
     const collectedUsdCents = links.reduce((sum, link) => sum + link.totalReceivedUsdCents, 0n);
@@ -85,6 +90,36 @@ export function DashboardOverview() {
 
     return { collectedUsdCents, collectedWei, active };
   }, [links, now]);
+
+  const linksTotalPages = Math.max(1, Math.ceil(links.length / LINKS_PAGE_SIZE));
+  const safeLinksPage = Math.min(linksPage, linksTotalPages - 1);
+  const visibleLinks = links.slice(
+    safeLinksPage * LINKS_PAGE_SIZE,
+    safeLinksPage * LINKS_PAGE_SIZE + LINKS_PAGE_SIZE,
+  );
+  const visiblePayments = payments.slice(
+    paymentsPage * PAYMENTS_PAGE_SIZE,
+    paymentsPage * PAYMENTS_PAGE_SIZE + PAYMENTS_PAGE_SIZE,
+  );
+
+  function goPrevLinksPage() {
+    setLinksPage((page) => Math.max(0, page - 1));
+  }
+
+  function goNextLinksPage() {
+    setLinksPage((page) => Math.min(linksTotalPages - 1, page + 1));
+  }
+
+  function goPrevPaymentsPage() {
+    setPaymentsPage((page) => Math.max(0, page - 1));
+  }
+
+  async function goNextPaymentsPage() {
+    if ((paymentsPage + 1) * PAYMENTS_PAGE_SIZE >= payments.length && hasMore) {
+      await loadMore();
+    }
+    setPaymentsPage((page) => page + 1);
+  }
 
   async function copyLink(slug: string) {
     try {
@@ -381,7 +416,7 @@ export function DashboardOverview() {
                   </tr>
                 </thead>
                 <tbody>
-                  {links.map((link) => (
+                  {visibleLinks.map((link) => (
                     <tr
                       key={link.slug}
                       className="border-b border-line/70 last:border-0 hover:bg-surface-hover/40"
@@ -428,6 +463,32 @@ export function DashboardOverview() {
             </div>
           )}
 
+          {links.length > LINKS_PAGE_SIZE && (
+            <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-3 sm:px-6">
+              <p className="text-xs text-muted tabular-nums">
+                Page {safeLinksPage + 1} of {linksTotalPages}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={goPrevLinksPage}
+                  disabled={safeLinksPage === 0}
+                  className="border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={goNextLinksPage}
+                  disabled={safeLinksPage === linksTotalPages - 1}
+                  className="border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+
           <p aria-live="polite" className="sr-only">
             {copiedSlug ? "Payment link copied" : copyFailed ? "Could not copy the link" : ""}
           </p>
@@ -440,11 +501,6 @@ export function DashboardOverview() {
           <h2 id="activity-title" className="mt-1 text-base font-medium">
 Recent settlements
           </h2>
-          {hasMore && (
-            <p className="mt-2 text-xs leading-5 text-muted">
-              Showing this merchant&apos;s recent settlements only so the feed stays responsive.
-            </p>
-          )}
 
           {isLoading && (
             <>
@@ -477,7 +533,7 @@ Recent settlements
 
           {payments.length > 0 && (
             <ul className="mt-6 divide-y divide-line">
-              {payments.map((payment) => (
+              {visiblePayments.map((payment) => (
                 <li
                   key={`${payment.linkId}-${payment.paidAt}`}
                   className="flex items-start justify-between gap-4 py-4 first:pt-0"
@@ -505,15 +561,28 @@ Recent settlements
             </ul>
           )}
 
-          {payments.length > 0 && hasMore && (
-            <button
-              type="button"
-              onClick={loadMore}
-              disabled={isLoadingMore}
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 border border-line px-4 py-2.5 text-xs font-semibold text-muted hover:border-line-strong hover:text-ink disabled:cursor-wait disabled:opacity-60"
-            >
-              {isLoadingMore ? "Loading more…" : "Load more settlements"}
-            </button>
+          {payments.length > PAYMENTS_PAGE_SIZE && (
+            <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4">
+              <p className="text-xs text-muted tabular-nums">Page {paymentsPage + 1}</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={goPrevPaymentsPage}
+                  disabled={paymentsPage === 0 || isLoadingMore}
+                  className="border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={goNextPaymentsPage}
+                  disabled={(paymentsPage + 1) * PAYMENTS_PAGE_SIZE >= payments.length && !hasMore}
+                  className="border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {isLoadingMore ? "Loading…" : "Next"}
+                </button>
+              </div>
+            </div>
           )}
         </section>
       </div>

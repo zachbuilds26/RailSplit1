@@ -78,7 +78,7 @@ export default function Home() {
         </div>
         <header className="relative z-10 mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-10">
           <RailsplitLogo />
-          <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted sm:gap-6" aria-label="Main navigation">
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-muted sm:gap-6" aria-label="Main navigation">
             <a href="#workflow" className="hover:text-ink">
               How it works
             </a>
