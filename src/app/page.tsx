@@ -77,11 +77,11 @@ const whyFlare = [
 export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-background text-ink">
-      <section className="grid-fade relative isolate overflow-hidden border-b border-line">
-        <div className="absolute inset-x-0 top-0 h-px bg-accent/50" />
+      <div className="fixed inset-0 z-0 pointer-events-none grid-fade" />
+      <section className="relative isolate overflow-hidden">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
-          <div className="absolute right-0 bottom-0 z-0 w-[120%] h-[120%] opacity-[0.11]" style={{ maskImage: 'linear-gradient(to left, black 20%, transparent 80%)', transform: 'translateX(350px) translateY(80px) scale(1.8)', transformOrigin: 'bottom right' }}>
+          <div className="absolute right-0 bottom-0 z-0 w-[120%] h-[120%] opacity-[0.11]" style={{ maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)', transform: 'translateX(350px) translateY(80px) scale(1.8)', transformOrigin: 'bottom right' }}>
             <Image
               src="/hero-engraving.png"
               alt=""
@@ -184,7 +184,7 @@ export default function Home() {
         </ol>
       </section>
 
-<section id="why-flare" className="relative border-y border-line bg-background-deep overflow-hidden">
+<section id="why-flare" className="relative bg-background-deep overflow-hidden">
         <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 w-[140%] h-[140%] opacity-[0.09]" style={{ maskImage: 'radial-gradient(ellipse 60% 50% at 80% 70%, black 20%, transparent 80%)', transform: 'translateX(400px) translateY(100px) scale(2.5)', transformOrigin: 'bottom right' }}>
           <Image
             src="/bridge.png"
