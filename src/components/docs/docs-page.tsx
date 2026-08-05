@@ -19,26 +19,32 @@ const faqItems = [
   {
     question: "What does RailSplit do?",
     answer:
-      "RailSplit gives merchants one payment link with a clear dollar price and direct settlement on Flare.",
+      "RailSplit turns a merchant's price into a payment link. The customer pays the amount shown, and the funds move to the merchant's wallet without an intermediary.",
   },
   {
     question: "How does the price stay current?",
     answer:
-      "RailSplit uses the live onchain rate when payment is confirmed, so the amount stays aligned with settlement.",
+      "RailSplit prices each payment with the live onchain rate at confirmation, so the amount charged matches the market when the transaction lands.",
   },
   {
-    question: "Does RailSplit hold funds?",
-    answer: "No. Payment moves directly to the merchant wallet in the same flow.",
+    question: "Why does the checkout ask for slightly more than the price?",
+    answer:
+      "The dollar price is fixed, but the coin amount moves with the live rate. The contract takes a small buffer at payment time and automatically refunds whatever is left over.",
+  },
+  {
+    question: "When does a link stop taking payments?",
+    answer:
+      "A link closes permanently once a payment confirms, or when its expiry time passes. After that the checkout shows a completed or expired state.",
   },
   {
     question: "Can a link be paid twice?",
     answer:
-      "No. Each link closes after a successful payment, so the checkout switches to a completed state.",
+      "No. The first successful payment closes the link, so no one can pay the same checkout twice.",
   },
   {
-    question: "Can I use it on mainnet?",
+    question: "Is this live on mainnet?",
     answer:
-      "Not yet. This demo runs on Coston2 so you can review the full flow without mainnet risk.",
+      "Not yet. The demo runs on Coston2 so you can review the full flow without mainnet risk.",
   },
 ];
 
@@ -114,8 +120,8 @@ export function DocsPage() {
             </span>
             <h1 className="font-display railsplit-docs__title">Clear payment links on Flare.</h1>
             <p className="railsplit-docs__lead">
-              RailSplit gives merchants one checkout link with a clear dollar price and direct
-              settlement on Flare.
+              With RailSplit, a merchant publishes one payment link, names the dollar price, and
+              the payment confirms onchain and lands in their wallet.
             </p>
             <div className="railsplit-docs__callout">
               <p>
@@ -128,8 +134,8 @@ export function DocsPage() {
           <section className="railsplit-docs__section" id="overview">
             <h2 className="railsplit-docs__section-title">Overview</h2>
             <p>
-              RailSplit turns a dollar price into a checkout link and settles the payment directly
-              to the merchant.
+              The flow is simple: publish a link, share it, and the payment moves onchain to the
+              merchant wallet.
             </p>
             <p>
               The landing page introduces the product, the checkout confirms the amount, the
@@ -141,10 +147,10 @@ export function DocsPage() {
             <h2 className="railsplit-docs__section-title">Flow</h2>
             <ol className="railsplit-docs__steps">
               <li>
-                <strong>Set a dollar price.</strong> The merchant publishes a link with a clear amount.
+                <strong>Set a dollar price.</strong> The merchant publishes a payment link with the exact amount.
               </li>
               <li>
-                <strong>Share one checkout URL.</strong> Customers open the link, connect a wallet,
+                <strong>Share one payment link.</strong> Customers open it, connect a wallet,
                 and review the live payment amount.
               </li>
               <li>

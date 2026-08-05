@@ -10,7 +10,7 @@ const faqItems = [
   {
     question: "What is RailSplit?",
     answer:
-      "RailSplit gives merchants a single payment link with a clear dollar price and direct settlement on Flare.",
+      "RailSplit gives a merchant one link per payment. Customers see the exact dollar price, and the settlement arrives directly in the merchant wallet.",
   },
   {
     question: "Where does the amount come from?",
@@ -40,14 +40,14 @@ const faqItems = [
 const whyFlare = [
   {
     number: "01",
-    title: "Built for live settlement",
+    title: "Priced by Flare's FTSO feeds",
     copy:
-      "RailSplit uses the current onchain rate when the transaction is confirmed, not a stale screen value.",
+      "RailSplit reads the rate from Flare's onchain price feeds at the moment of confirmation, so the amount charged matches the live market — not a stale screen value.",
   },
   {
     number: "02",
     title: "Clear at the point of payment",
-    copy: "Customers see one clean checkout and merchants receive a precise settlement amount.",
+    copy: "Customers see one clean checkout with the live amount, and merchants receive exactly the dollar price they set.",
   },
   {
     number: "03",
@@ -116,8 +116,8 @@ export default function Home() {
             <span className="text-accent/95">Clear payments.</span>
           </h1>
           <p className="mt-7 max-w-2xl text-base leading-7 text-muted">
-            RailSplit helps merchants publish a simple payment link with a clear dollar price and
-            settle directly on Flare.
+            RailSplit helps merchants publish a payment link that shows a clear dollar price and
+            settles on Flare when the customer pays.
           </p>
           <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
             <Link

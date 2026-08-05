@@ -325,19 +325,19 @@ function PaidReceipt({ link, hash }: { link: OnchainLink; hash: `0x${string}` })
 function Unavailable({ reason }: { reason: "missing" | "expired" | "closed" | "paid" }) {
   const copy = {
     missing: {
-      heading: "This checkout link was not found.",
+      heading: "This payment link was not found.",
       body: "We could not find a record for this URL. Check the link or ask the merchant to send a new one.",
     },
     expired: {
-      heading: "This checkout link has expired.",
+      heading: "This payment link has expired.",
       body: "The merchant set an end date that has passed. Ask for a new link.",
     },
     closed: {
-      heading: "This checkout link is closed.",
+      heading: "This payment link is closed.",
       body: "The merchant is no longer accepting payments through this link.",
     },
     paid: {
-      heading: "This checkout link has already been completed.",
+      heading: "This payment link has already been completed.",
       body: "The merchant has already closed it after payment was confirmed.",
     },
   }[reason];
