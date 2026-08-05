@@ -237,7 +237,7 @@ export default function Home() {
           {faqItems.map((item) => (
             <details
               key={item.question}
-              className="group rounded-[28px] border border-line bg-surface p-5 transition hover:border-line-strong hover:bg-surface-hover"
+              className="group rounded-none border border-line bg-surface p-5 transition hover:border-line-strong hover:bg-surface-hover"
             >
               <summary className="flex cursor-pointer items-start justify-between gap-4 text-left font-display text-xl leading-tight tracking-[-0.035em]">
                 <span>{item.question}</span>
