@@ -145,10 +145,13 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="workflow" className="relative mx-auto min-h-[560px] max-w-7xl px-5 py-20 sm:px-8 lg:px-10 overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none select-none absolute top-1/2 left-1/2 z-0 opacity-100" style={{ width: 'min(1600px, 135vw)', height: 'auto', transform: 'translate(-66.5%, -50%)', maskImage: 'radial-gradient(circle at 66% 50%, black 70%, transparent 96%)', WebkitMaskImage: 'radial-gradient(circle at 66% 50%, black 70%, transparent 96%)' }}>
+      <section id="workflow" className="relative mx-auto grid min-h-[560px] max-w-7xl place-items-center px-5 py-20 sm:px-8 lg:px-10 overflow-hidden">
+        <h2 className="font-display relative z-0 col-start-1 row-start-1 max-w-5xl text-center text-4xl leading-[0.95] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+          How it works
+        </h2>
+        <div aria-hidden="true" className="pointer-events-none select-none absolute top-1/2 left-1/2 z-10 opacity-100" style={{ width: 'min(1600px, 135vw)', height: 'auto', transform: 'translate(-66.5%, -50%)', maskImage: 'radial-gradient(circle at 66% 50%, black 70%, transparent 96%)', WebkitMaskImage: 'radial-gradient(circle at 66% 50%, black 70%, transparent 96%)' }}>
           <Image
-            src="/workflow-panels.png"
+            src="/workflow-panels-cut.png"
             alt=""
             width={2046}
             height={769}
