@@ -190,7 +190,7 @@ export default function Home() {
 <section id="why-flare" className="relative bg-background-deep overflow-hidden">
         <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 w-full h-full opacity-[0.40]" style={{ maskImage: 'radial-gradient(ellipse 70% 80% at 90% 60%, black 5%, transparent 70%)', transform: 'translateX(120px) translateY(-20px) scale(1.2)', transformOrigin: 'bottom right' }}>
           <Image
-            src="/ques.webp"
+            src="/ques.png"
             alt=""
             fill
             sizes="100vw"
