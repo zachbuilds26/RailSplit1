@@ -146,7 +146,7 @@ export default function Home() {
       </section>
 
       <section id="workflow" className="relative mx-auto min-h-[560px] max-w-7xl px-5 py-20 sm:px-8 lg:px-10 overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none select-none absolute top-1/2 left-1/2 z-0 opacity-90" style={{ width: 'min(1600px, 135vw)', height: 'auto', transform: 'translate(-66.5%, -50%)', maskImage: 'radial-gradient(circle at 66% 50%, black 45%, transparent 78%)', WebkitMaskImage: 'radial-gradient(circle at 66% 50%, black 45%, transparent 78%)' }}>
+        <div aria-hidden="true" className="pointer-events-none select-none absolute top-1/2 left-1/2 z-0 opacity-100" style={{ width: 'min(1600px, 135vw)', height: 'auto', transform: 'translate(-66.5%, -50%)', maskImage: 'radial-gradient(circle at 66% 50%, black 70%, transparent 96%)', WebkitMaskImage: 'radial-gradient(circle at 66% 50%, black 70%, transparent 96%)' }}>
           <Image
             src="/workflow-panels.png"
             alt=""
