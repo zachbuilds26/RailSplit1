@@ -14,10 +14,11 @@ export function RailsplitLogo({ href = "/", compact = false }: RailsplitLogoProp
         aria-hidden="true"
       >
         <Image
-          src="/RailSplit_logo_transparent.png"
+          src="/railsplit-logo-mark.webp"
           alt=""
           fill
           sizes={compact ? "40px" : "44px"}
+          unoptimized
           className="object-contain"
           priority
         />

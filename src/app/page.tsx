@@ -65,9 +65,12 @@ export default function Home() {
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
           <div className="absolute right-0 bottom-0 z-0 w-[120%] h-[120%] opacity-[0.11]" style={{ maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)', transform: 'translateX(350px) translateY(80px) scale(1.8)', transformOrigin: 'bottom right' }}>
             <Image
-              src="/hero-engraving.png"
+              src="/hero-engraving.webp"
               alt=""
               fill
+              sizes="100vw"
+              priority
+              unoptimized
               className="object-contain object-right-bottom"
             />
           </div>
@@ -151,10 +154,12 @@ export default function Home() {
         </h2>
         <div aria-hidden="true" className="pointer-events-none select-none absolute top-1/2 left-1/2 z-10 opacity-100" style={{ width: 'min(1600px, 135vw)', height: 'auto', transform: 'translate(-66.5%, -50%)', maskImage: 'radial-gradient(circle at 66% 50%, black 70%, transparent 96%)', WebkitMaskImage: 'radial-gradient(circle at 66% 50%, black 70%, transparent 96%)' }}>
           <Image
-            src="/workflow-panels-cut.png"
+            src="/workflow-panels-cut.webp"
             alt=""
             width={2046}
             height={769}
+            sizes="(max-width: 1600px) 135vw, 1600px"
+            unoptimized
             className="w-full h-auto"
           />
         </div>
@@ -163,9 +168,11 @@ export default function Home() {
 <section id="why-flare" className="relative bg-background-deep overflow-hidden">
         <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 w-full h-full opacity-[0.40]" style={{ maskImage: 'radial-gradient(ellipse 70% 80% at 90% 60%, black 5%, transparent 70%)', transform: 'translateX(120px) translateY(-20px) scale(1.2)', transformOrigin: 'bottom right' }}>
           <Image
-            src="/ques.png"
+            src="/ques.webp"
             alt=""
             fill
+            sizes="100vw"
+            unoptimized
             className="object-contain object-right-bottom"
           />
         </div>
