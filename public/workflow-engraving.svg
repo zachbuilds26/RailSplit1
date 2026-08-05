@@ -11,7 +11,7 @@
       <rect width="5" height="5" fill="url(#hatch-2)"/>
     </pattern>
     <mask id="fade-all">
-      <rect width="1200" height="800" fill="white"/>
+      <rect width="1200" height="800" fill="black"/>
       <rect x="0" y="0" width="120" height="800" fill="url(#left-fade)"/>
       <rect x="1080" y="0" width="120" height="800" fill="url(#right-fade)"/>
       <rect x="0" y="0" width="1200" height="60" fill="url(#top-fade)"/>
