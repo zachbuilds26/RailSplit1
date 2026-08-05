@@ -164,15 +164,16 @@ export default function Home() {
       </section>
 
       <section id="workflow" className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10 overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 z-0 w-[50%] opacity-[0.93]" style={{ maskImage: 'radial-gradient(ellipse 60% 70% at 80% 50%, black 10%, transparent 80%)' }}>
+        <div aria-hidden="true" className="pointer-events-none select-none absolute top-1/2 right-12 z-0 -translate-y-1/2 opacity-45" style={{ width: 'min(48vw, 700px)', height: 'auto', maskImage: 'radial-gradient(circle at center, black 60%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle at center, black 60%, transparent 100%)' }}>
           <Image
-            src="/workflow-engraving.svg"
+            src="/workflow-panels.png"
             alt=""
-            fill
-            className="object-contain object-right"
+            width={2046}
+            height={769}
+            className="w-full h-auto"
           />
         </div>
-        <div className="max-w-2xl">
+        <div className="relative z-[2] max-w-2xl">
           <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">How it works</p>
           <h2 className="font-display mt-4 text-4xl leading-[0.94] tracking-[-0.045em] sm:text-5xl">
             Three steps.
