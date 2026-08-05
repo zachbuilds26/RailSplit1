@@ -185,6 +185,14 @@ export default function Home() {
       </section>
 
 <section id="why-flare" className="relative bg-background-deep overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 opacity-[0.09]" style={{ maskImage: 'radial-gradient(ellipse 50% 60% at 80% 80%, black 10%, transparent 80%)', transform: 'translateX(300px) translateY(80px) scale(2.2)', transformOrigin: 'bottom right' }}>
+          <Image
+            src="/ques.png"
+            alt=""
+            fill
+            className="object-contain object-right-bottom"
+          />
+        </div>
         <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-[10px] font-semibold tracking-[0.15em] text-accent uppercase">Why Flare</p>
