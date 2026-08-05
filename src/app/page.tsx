@@ -185,7 +185,7 @@ export default function Home() {
       </section>
 
 <section id="why-flare" className="relative border-y border-line bg-background-deep overflow-hidden">
-        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 opacity-[0.11]" style={{ maskImage: 'linear-gradient(to left, black 20%, transparent 80%)', transform: 'translateX(350px) translateY(60px) scale(2)', transformOrigin: 'bottom right' }}>
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 z-0 opacity-[0.30]" style={{ maskImage: 'linear-gradient(to left, black 20%, transparent 80%)', transform: 'translateX(350px) translateY(60px) scale(2)', transformOrigin: 'bottom right' }}>
           <Image
             src="/bridge.png"
             alt=""
