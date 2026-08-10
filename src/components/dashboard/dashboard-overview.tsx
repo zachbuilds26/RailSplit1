@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useAccount } from "wagmi";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
+import { useWalletController } from "@/components/wallet/wallet-controller";
 import { explorerAddress, railsplitChain, shortenAddress } from "@/lib/chain";
 import { formatReadError } from "@/lib/railsplit-errors";
 import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
@@ -58,7 +58,8 @@ function formatSettlementAge(now: bigint | undefined, paidAt: bigint) {
 }
 
 export function DashboardOverview() {
-  const { address } = useAccount();
+  const { wallet } = useWalletController();
+  const address = wallet.address;
   const {
     links,
     payments,
@@ -111,6 +112,16 @@ export function DashboardOverview() {
       setCopyFailed(true);
       setCopiedSlug(null);
     }
+  }
+
+  if (!wallet.isReady && wallet.phase !== "disconnected") {
+    return (
+      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+        <p className="text-[10px] font-semibold tracking-[0.16em] text-faint uppercase">{railsplitChain.name}</p>
+        <h1 className="font-display mt-2 text-3xl tracking-[-0.045em] sm:text-4xl">Merchant dashboard</h1>
+        <p role="status" aria-live="polite" className="mt-3 text-sm text-muted">Restoring your wallet connection…</p>
+      </div>
+    );
   }
 
   if (!address) {
@@ -438,18 +449,6 @@ export function DashboardOverview() {
                       </td>
                     </tr>
                   ))}
-                  {Array.from(
-                    { length: Math.max(0, LINKS_PAGE_SIZE - visibleLinks.length) },
-                    (_, index) => (
-                      <tr
-                        key={`filler-${index}`}
-                        aria-hidden="true"
-                        className="border-b border-line/70 last:border-0"
-                      >
-                        <td colSpan={4} className="px-5 py-4 sm:px-6">&nbsp;</td>
-                      </tr>
-                    ),
-                  )}
                 </tbody>
               </table>
             </div>

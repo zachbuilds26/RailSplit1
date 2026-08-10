@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useAccount, useBalance } from "wagmi";
+import { useBalance } from "wagmi";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { XrpConnectWallet } from "@/components/xrp/xrp-connect-wallet";
+import { useWalletController } from "@/components/wallet/wallet-controller";
 import { buildCheckoutPath, getRail } from "@/lib/chain";
 import { formatReadError } from "@/lib/railsplit-errors";
 import { formatCoin, formatUsdCents, isExpired, useNow } from "@/lib/use-railsplit";
@@ -26,7 +27,8 @@ function Status({ active, expiresAt, paymentCount, now }: { active: boolean; exp
 }
 
 export function XrpDashboardOverview() {
-  const { address } = useAccount();
+  const { wallet } = useWalletController();
+  const address = wallet.address;
   const { links, payments, isLoading, error, refetch } = useXrpMerchantLedger(address);
   const now = useNow();
   const { data: balance } = useBalance({
@@ -51,6 +53,16 @@ export function XrpDashboardOverview() {
     } catch {
       setCopiedSlug(null);
     }
+  }
+
+  if (!wallet.isReady && wallet.phase !== "disconnected") {
+    return (
+      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+        <p className="text-[10px] font-semibold tracking-[0.16em] text-faint uppercase">{rail.chain.name}</p>
+        <h1 className="font-display mt-2 text-3xl tracking-[-0.045em] sm:text-4xl">XRP dashboard</h1>
+        <p role="status" aria-live="polite" className="mt-3 text-sm text-muted">Restoring your wallet connection…</p>
+      </div>
+    );
   }
 
   if (!address) {
@@ -151,9 +163,9 @@ export function XrpDashboardOverview() {
               <p className="text-[10px] font-semibold tracking-[0.15em] text-faint uppercase">Payment links</p>
               <h2 id="links-title" className="mt-1 text-base font-medium">Payment links</h2>
             </div>
-            <Link href="/dashboard/links/new/xrpl-evm-testnet" className="inline-flex items-center gap-2 text-xs font-semibold text-accent hover:text-white">
+            <Link href="/dashboard/links/new" className="inline-flex items-center gap-2 text-xs font-semibold text-accent hover:text-white">
               <Icon name="plus" className="size-3.5" />
-              Create XRP link
+              Create link
             </Link>
           </div>
 
@@ -182,11 +194,11 @@ export function XrpDashboardOverview() {
             <div className="p-6">
               <p className="text-sm text-muted">No XRP payment links have been published yet.</p>
               <Link
-                href="/dashboard/links/new/xrpl-evm-testnet"
+                href="/dashboard/links/new"
                 className="mt-4 inline-flex items-center gap-2 bg-accent px-4 py-2.5 text-sm font-semibold text-accent-ink hover:bg-white"
               >
                 <Icon name="plus" className="size-4" />
-                Create your first XRP link
+                Create your first link
               </Link>
             </div>
           )}

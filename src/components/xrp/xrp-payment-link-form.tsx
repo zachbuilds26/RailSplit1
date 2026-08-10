@@ -98,7 +98,7 @@ export function XrpPaymentLinkForm() {
           </button>
           <button
             type="button"
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/dashboard?rail=xrpl-evm-testnet")}
             className="border border-line px-5 py-3 text-sm font-semibold hover:border-line-strong hover:bg-surface"
           >
             Back to dashboard
@@ -286,7 +286,7 @@ export function XrpPaymentLinkForm() {
           <div className="mt-8 flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">
             <button
               type="button"
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/dashboard?rail=xrpl-evm-testnet")}
               className="px-4 py-3 text-sm text-muted hover:text-ink"
             >
               Cancel

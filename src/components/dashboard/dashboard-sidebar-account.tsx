@@ -1,23 +1,35 @@
 "use client";
 
-import { useAccount, useBalance } from "wagmi";
+import { useBalance } from "wagmi";
 import { formatUnits } from "viem";
-import { railsplitChain, shortenAddress } from "@/lib/chain";
+import { getRail, shortenAddress, type RailKey } from "@/lib/chain";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
+import { useWalletController } from "@/components/wallet/wallet-controller";
 
 /**
  * Shows the connected wallet identity in the sidebar account section.
  * Falls back to a neutral prompt when no wallet is connected.
  */
-export function DashboardSidebarAccount() {
-  const { address, isConnected } = useAccount();
+export function DashboardSidebarAccount({ railKey }: { railKey: RailKey }) {
+  const rail = getRail(railKey);
+  const { wallet } = useWalletController();
+  const address = wallet.address;
   const { data: balance } = useBalance({
     address,
-    chainId: railsplitChain.id,
+    chainId: rail.chain.id,
     query: { enabled: Boolean(address) },
   });
 
-  if (!isConnected || !address) {
+  if (!wallet.isReady && wallet.phase !== "disconnected") {
+    return (
+      <div>
+        <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">Account</p>
+        <p role="status" aria-live="polite" className="mt-2 text-sm text-muted">Restoring wallet…</p>
+      </div>
+    );
+  }
+
+  if (!wallet.isReady || !address) {
     return (
       <div>
         <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">

@@ -28,6 +28,7 @@ export const FAUCET_URL = rails.coston2.faucetUrl;
 export const wagmiConfig = createConfig({
   chains: [rails.coston2.chain, rails["xrpl-evm-testnet"].chain],
   connectors: [injected({ shimDisconnect: false })],
+  multiInjectedProviderDiscovery: true,
   transports: {
     [rails.coston2.chain.id]: http(
       rails.coston2.chain.rpcUrls.default.http[0] ?? "https://coston2-api.flare.network/ext/C/rpc",

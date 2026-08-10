@@ -282,7 +282,7 @@ function PaidReceipt({ slug, hash }: { slug: string; hash: `0x${string}` }) {
       </div>
 
       <Link
-        href="/dashboard"
+        href="/dashboard?rail=xrpl-evm-testnet"
         className="mt-7 inline-flex w-full items-center justify-center border border-line py-3 text-sm font-semibold hover:border-line-strong hover:bg-surface-raised"
       >
         Back to dashboard

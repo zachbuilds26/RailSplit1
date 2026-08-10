@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import { XrpDashboardOverview } from "@/components/xrp/xrp-dashboard-overview";
-
-export const metadata: Metadata = {
-  title: "XRP Dashboard",
-};
+import { redirect } from "next/navigation";
 
 export default function XrpDashboardPage() {
-  return <XrpDashboardOverview />;
+  redirect("/dashboard?rail=xrpl-evm-testnet");
 }
