@@ -29,7 +29,7 @@ const faqItems = [
   {
     question: "Is this ready for mainnet?",
     answer:
-      "Not yet. This demo runs on Coston2 so the full flow stays fast and easy to verify.",
+      "Not yet. This demo runs on Coston2 today, and XRPL EVM Testnet support is being added alongside it.",
   },
   {
     question: "Which wallets work?",

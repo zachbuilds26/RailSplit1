@@ -91,6 +91,34 @@ The contract code is in `contracts/`. It is a separate Hardhat project.
 
 The deploy script deploys `RailSplitPay`, seeds sample links, and writes the new contract address into the Next.js app.
 
+## XRP EVM Testnet deployment
+
+RailSplit also has a separate XRP testnet rail. The deploy script reads env values from either `contracts/.env` or the repo-root `.env`, so use whichever one you already keep your testnet keys in.
+
+### Suggested env values
+
+- `DEPLOYER_PRIVATE_KEY` — used by the existing C2FLR deploy script
+- `XRP_DEPLOYER_PRIVATE_KEY` — optional, used only for the XRP deploy script
+- `XRP_QUOTE_SIGNER_PRIVATE_KEY` — optional, used by the XRP deploy script and the XRP quote API
+- `XRP_RPC_URL` — optional, defaults to `https://rpc.testnet.xrplevm.org`
+- `XRP_EXPLORER_URL` — optional, defaults to `https://explorer.testnet.xrplevm.org`
+- `XRP_PRICE_SOURCE_URL` — optional, defaults to the CoinGecko XRP/USD endpoint
+- `XRP_QUOTE_TTL_SECONDS` — optional, defaults to `60`
+- `XRP_QUOTE_DECIMALS` — optional, defaults to `8`
+
+### Deploy XRP
+
+```bash
+cd contracts
+npm run deploy:xrplevm
+```
+
+That writes `src/lib/xrp-contract-address.ts` for the app and prints the deployed testnet address.
+
+### Run the XRP quote API
+
+Set `XRP_QUOTE_SIGNER_PRIVATE_KEY` in the app runtime environment so `/api/xrp/quote` can sign checkout quotes.
+
 ## Deploy the app
 
 Build the root app with `npm run build`, then deploy it to any host that supports Next.js 16.

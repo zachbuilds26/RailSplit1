@@ -1,12 +1,13 @@
 // Creates a throwaway deployer wallet for Coston2 and prints the address.
 // The private key is written to .env, which git ignores.
-const { writeFileSync, existsSync, readFileSync } = require("node:fs");
+const { writeFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { Wallet } = require("ethers");
+const { readEnvValue } = require("./read-env");
 
 const envPath = join(__dirname, "..", ".env");
 
-if (existsSync(envPath) && /DEPLOYER_PRIVATE_KEY\s*=\s*0x[0-9a-fA-F]{64}/.test(readFileSync(envPath, "utf8"))) {
+if (readEnvValue("DEPLOYER_PRIVATE_KEY")) {
   console.log(".env already holds a deployer key. Delete it first to make a new one.");
   process.exit(0);
 }

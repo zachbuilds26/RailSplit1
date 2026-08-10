@@ -12,6 +12,8 @@ const navigation = [
 
 const quickActions = [
   { label: "Create link", href: "/dashboard/links/new", icon: "plus" as const },
+  { label: "Create XRP link", href: "/dashboard/links/new/xrpl-evm-testnet", icon: "plus" as const },
+  { label: "Open XRP dashboard", href: "/dashboard/xrp", icon: "grid" as const },
   { label: "View docs", href: "/docs", icon: "link" as const },
 ];
 

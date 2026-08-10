@@ -1,19 +1,14 @@
 // Verifies the money movement in pay(), using a customer wallet that is not
 // the merchant. Asserts the merchant receives exactly the converted dollar
 // price and the customer is refunded the surplus.
-const { readFileSync, existsSync } = require("node:fs");
+const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { JsonRpcProvider, Wallet, Contract, formatEther } = require("ethers");
+const { readEnvValue } = require("./read-env");
 
 const RPC_URL = "https://coston2-api.flare.network/ext/C/rpc";
 const EXPLORER = "https://coston2-explorer.flare.network";
 const SLUG = process.argv[2] || "studio-retainer-july";
-
-function envValue(file, name) {
-  if (!existsSync(file)) return undefined;
-  const match = new RegExp(name + "\\s*=\\s*(\\S+)").exec(readFileSync(file, "utf8"));
-  return match ? match[1] : undefined;
-}
 
 function readAddress() {
   const generated = join(__dirname, "..", "..", "src", "lib", "contract-address.ts");
@@ -26,7 +21,7 @@ function readAddress() {
 }
 
 async function main() {
-  const payerKey = envValue(join(__dirname, "..", ".payer.env"), "PAYER_PRIVATE_KEY");
+  const payerKey = readEnvValue("PAYER_PRIVATE_KEY", [".payer.env"]);
   if (!payerKey) throw new Error("No .payer.env with PAYER_PRIVATE_KEY");
 
   const address = readAddress();

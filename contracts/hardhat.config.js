@@ -1,23 +1,10 @@
-const { existsSync, readFileSync } = require("node:fs");
-const { join } = require("node:path");
+const { readEnvValue } = require("./scripts/read-env");
 
-// Reads DEPLOYER_PRIVATE_KEY from .env without pulling in a dependency.
-function readEnvKey() {
-  if (process.env.DEPLOYER_PRIVATE_KEY) return process.env.DEPLOYER_PRIVATE_KEY;
-
-  const envPath = join(__dirname, ".env");
-  if (!existsSync(envPath)) return undefined;
-
-  for (const line of readFileSync(envPath, "utf8").split(/\r?\n/)) {
-    const match = /^\s*DEPLOYER_PRIVATE_KEY\s*=\s*(.+?)\s*$/.exec(line);
-    if (match) return match[1].replace(/^["']|["']$/g, "");
-  }
-
-  return undefined;
-}
-
-const deployerKey = readEnvKey();
-const accounts = deployerKey ? [deployerKey] : [];
+const deployerKey = readEnvValue("DEPLOYER_PRIVATE_KEY");
+const xrplevmDeployerKey = readEnvValue("XRP_DEPLOYER_PRIVATE_KEY") || deployerKey;
+const xrplevmRpcUrl = readEnvValue("XRP_RPC_URL") || readEnvValue("XRPL_EVM_RPC_URL") || "https://rpc.testnet.xrplevm.org";
+const coston2Accounts = deployerKey ? [deployerKey] : [];
+const xrplevmAccounts = xrplevmDeployerKey ? [xrplevmDeployerKey] : coston2Accounts;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -32,12 +19,17 @@ module.exports = {
     coston2: {
       url: "https://coston2-api.flare.network/ext/C/rpc",
       chainId: 114,
-      accounts,
+      accounts: coston2Accounts,
+    },
+    xrplevmTestnet: {
+      url: xrplevmRpcUrl,
+      chainId: 1449000,
+      accounts: xrplevmAccounts,
     },
     flare: {
       url: "https://flare-api.flare.network/ext/C/rpc",
       chainId: 14,
-      accounts,
+      accounts: coston2Accounts,
     },
   },
 };

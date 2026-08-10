@@ -1,9 +1,10 @@
 // Deploys RailSplitPay and seeds a few payment links so the dashboard has
 // real on-chain data to read. Run with:
 //   npx hardhat run scripts/deploy.js --network coston2
-const { readFileSync, writeFileSync, existsSync, mkdirSync } = require("node:fs");
+const { readFileSync, writeFileSync, mkdirSync } = require("node:fs");
 const { join, dirname } = require("node:path");
 const { JsonRpcProvider, Wallet, ContractFactory, formatEther } = require("ethers");
+const { readEnvValue } = require("./read-env");
 
 const RPC_URL = "https://coston2-api.flare.network/ext/C/rpc";
 const EXPLORER = "https://coston2-explorer.flare.network";
@@ -28,22 +29,8 @@ const seedLinks = [
   { slug: "archive-print-release", title: "Archive print release", priceUsdCents: 5 },
 ];
 
-function readKey() {
-  if (process.env.DEPLOYER_PRIVATE_KEY) return process.env.DEPLOYER_PRIVATE_KEY;
-
-  const envPath = join(__dirname, "..", ".env");
-  if (!existsSync(envPath)) return undefined;
-
-  for (const line of readFileSync(envPath, "utf8").split(/\r?\n/)) {
-    const match = /^\s*DEPLOYER_PRIVATE_KEY\s*=\s*(.+?)\s*$/.exec(line);
-    if (match) return match[1].replace(/^["']|["']$/g, "");
-  }
-
-  return undefined;
-}
-
 async function main() {
-  const key = readKey();
+  const key = readEnvValue("DEPLOYER_PRIVATE_KEY");
 
   if (!key) {
     throw new Error("No DEPLOYER_PRIVATE_KEY. Run: node scripts/new-wallet.js");
