@@ -18,6 +18,7 @@ import {
 } from "wagmi";
 import { xrplEvmTestnetChain } from "@/lib/chain";
 import { XRPL_EVM_PAY_ADDRESS } from "@/lib/xrp-contract-address";
+import { isUnknownLinkError } from "@/lib/railsplit-errors";
 import { RAILSPLIT_PAY_XRP_ABI } from "@/lib/railsplit-pay-xrp-abi";
 import { useXrpSmartAccountExecutor } from "@/lib/xrp-smart-account";
 
@@ -105,7 +106,7 @@ export function useXrpPaymentLink(slug: string) {
     link: query.data as XrpPaymentLink | undefined,
     isLoading: query.isLoading,
     error: query.error,
-    notFound: Boolean(query.error),
+    notFound: Boolean(query.error && isUnknownLinkError(query.error)),
     refetch: query.refetch,
   };
 }

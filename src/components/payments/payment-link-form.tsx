@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { Icon } from "@/components/ui/icon";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
-import { explorerTx, railsplitChain } from "@/lib/chain";
+import { buildCheckoutPath, explorerTx, railsplitChain } from "@/lib/chain";
 import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
 import { formatWriteError } from "@/lib/railsplit-errors";
 import { RAILSPLIT_PAY_ABI } from "@/lib/railsplit-pay-abi";
@@ -103,7 +103,7 @@ export function PaymentLinkForm() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             type="button"
-            onClick={() => router.push(`/pay/${submittedLink?.slug ?? slug}`)}
+            onClick={() => router.push(buildCheckoutPath("coston2", submittedLink?.slug ?? slug))}
             className="bg-accent px-5 py-3 text-sm font-semibold text-accent-ink hover:bg-white"
           >
             View checkout
@@ -245,7 +245,7 @@ export function PaymentLinkForm() {
               <span>Payment URL</span>
               <div className="flex border border-line bg-background focus-within:border-accent">
                 <span className="shrink-0 border-r border-line px-3.5 py-3 text-xs text-muted">
-                  /pay/
+                  /pay/flare/
                 </span>
                 <input
                   value={slug}
@@ -357,7 +357,7 @@ export function PaymentLinkForm() {
               Pay <span className="price-figure">{formatUsdCents(preview.cents)}</span>
             </div>
           </div>
-          <p className="mt-4 break-all text-xs leading-5 text-muted">/pay/{preview.slug}</p>
+          <p className="mt-4 break-all text-xs leading-5 text-muted">{buildCheckoutPath("coston2", preview.slug)}</p>
         </aside>
       </div>
     </div>

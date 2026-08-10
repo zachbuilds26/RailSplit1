@@ -1,47 +1,84 @@
-const DEFAULT_XRP_PRICE_SOURCE_URL =
-  "https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd";
-
 /** Matches RailSplitPayXrp.QUOTE_PRICE_DECIMALS on the deployed contract. */
 export const XRP_USD_PRICE_DECIMALS = 8;
 
+const PRICE_SCALE = 10n ** BigInt(XRP_USD_PRICE_DECIMALS);
+const PROVIDER_TIMEOUT_MS = 3000;
+
+type PriceProvider = {
+  name: string;
+  url: string;
+  getPrice: (data: unknown) => unknown;
+};
+
+const PROVIDERS: readonly PriceProvider[] = [
+  {
+    name: "CoinGecko",
+    url: "https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd",
+    getPrice: (data) => (data as { ripple?: { usd?: unknown } })?.ripple?.usd,
+  },
+  {
+    name: "Coinbase",
+    url: "https://api.coinbase.com/v2/prices/XRP-USD/spot",
+    getPrice: (data) => (data as { data?: { amount?: unknown } })?.data?.amount,
+  },
+  {
+    name: "Bitstamp",
+    url: "https://www.bitstamp.net/api/v2/ticker/xrpusd/",
+    getPrice: (data) => (data as { last?: unknown })?.last,
+  },
+];
+
 export class XrpRateSourceError extends Error {
-  constructor(message = "The XRP price source is unavailable.") {
-    super(message);
+  constructor() {
+    super("The XRP quote service is temporarily unavailable. Try again in a moment.");
     this.name = "XrpRateSourceError";
   }
 }
 
-export async function fetchXrpUsdRate() {
-  const sourceUrl = process.env.XRP_PRICE_SOURCE_URL || DEFAULT_XRP_PRICE_SOURCE_URL;
+function parseScaledUsdPrice(value: unknown) {
+  const raw = typeof value === "number" ? String(value) : typeof value === "string" ? value.trim() : "";
+  if (!/^\d+(?:\.\d+)?$/.test(raw)) return undefined;
 
-  let response: Response;
+  const [whole, fraction = ""] = raw.split(".");
+  const scaledFraction = `${fraction}${"0".repeat(XRP_USD_PRICE_DECIMALS)}`.slice(0, XRP_USD_PRICE_DECIMALS);
+  const scaled = BigInt(whole) * PRICE_SCALE + BigInt(scaledFraction);
+
+  return scaled > 0n ? scaled : undefined;
+}
+
+async function fetchProviderPrice(provider: PriceProvider) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+
   try {
-    response = await fetch(sourceUrl, {
+    const response = await fetch(provider.url, {
       headers: { accept: "application/json" },
       cache: "no-store",
+      redirect: "error",
+      signal: controller.signal,
     });
+
+    if (!response.ok) return undefined;
+
+    const data = await response.json() as unknown;
+    return parseScaledUsdPrice(provider.getPrice(data));
   } catch {
-    throw new XrpRateSourceError();
+    return undefined;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function fetchXrpUsdRate() {
+  for (const provider of PROVIDERS) {
+    const xrpUsdPrice = await fetchProviderPrice(provider);
+    if (xrpUsdPrice !== undefined) {
+      return {
+        xrpUsdPrice,
+        updatedAt: BigInt(Math.floor(Date.now() / 1000)),
+      };
+    }
   }
 
-  if (!response.ok) {
-    throw new XrpRateSourceError();
-  }
-
-  let data: { ripple?: { usd?: number } };
-  try {
-    data = (await response.json()) as { ripple?: { usd?: number } };
-  } catch {
-    throw new XrpRateSourceError("The XRP price source returned an invalid value.");
-  }
-
-  const xrpUsd = data.ripple?.usd;
-  if (typeof xrpUsd !== "number" || !Number.isFinite(xrpUsd) || xrpUsd <= 0) {
-    throw new XrpRateSourceError("The XRP price source returned an invalid value.");
-  }
-
-  return {
-    xrpUsdPrice: BigInt(Math.max(1, Math.round(xrpUsd * 10 ** XRP_USD_PRICE_DECIMALS))),
-    updatedAt: BigInt(Math.floor(Date.now() / 1000)),
-  };
+  throw new XrpRateSourceError();
 }

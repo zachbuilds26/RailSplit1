@@ -8,7 +8,8 @@ import { fetchXrpUsdRate, XRP_USD_PRICE_DECIMALS } from "@/lib/xrp-rate";
 export const dynamic = "force-dynamic";
 
 const RPC_URL = process.env.XRP_RPC_URL || "https://rpc.testnet.xrplevm.org";
-const QUOTE_TTL_SECONDS = BigInt(readPositiveInteger(process.env.XRP_QUOTE_TTL_SECONDS, 60));
+const QUOTE_TTL_SECONDS = BigInt(Math.min(readPositiveInteger(process.env.XRP_QUOTE_TTL_SECONDS, 60), 60));
+const MAX_RATE_AGE_SECONDS = 15n;
 
 function readPositiveInteger(value: string | undefined, fallback: number) {
   const parsed = Number(value);
@@ -72,50 +73,64 @@ export async function GET(request: Request) {
     return Response.json({ error: "This XRP checkout link could not be found." }, { status: 404 });
   }
 
-  let xrpUsdPrice: bigint;
+  let rate: Awaited<ReturnType<typeof fetchXrpUsdRate>>;
   try {
-    xrpUsdPrice = (await fetchXrpUsdRate()).xrpUsdPrice;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "The XRP price source is unavailable.";
-    return Response.json({ error: message }, { status: 502 });
+    rate = await fetchXrpUsdRate();
+  } catch {
+    return Response.json({ error: "The XRP quote service is temporarily unavailable. Try again in a moment." }, { status: 502 });
+  }
+
+  const xrpUsdPrice = rate.xrpUsdPrice;
+  const linkId = keccak256(stringToHex(slug));
+  let requiredWei: bigint;
+  try {
+    requiredWei = (await client.readContract({
+      address: XRPL_EVM_PAY_ADDRESS as `0x${string}`,
+      abi: RAILSPLIT_PAY_XRP_ABI,
+      functionName: "quote",
+      args: [slug, xrpUsdPrice],
+    })) as bigint;
+  } catch {
+    return Response.json({ error: "The XRP payment amount could not be calculated. Try again in a moment." }, { status: 502 });
   }
 
   const issuedAt = BigInt(Math.floor(Date.now() / 1000));
+  if (issuedAt - rate.updatedAt > MAX_RATE_AGE_SECONDS) {
+    return Response.json({ error: "The XRP quote service is temporarily unavailable. Try again in a moment." }, { status: 502 });
+  }
   const validUntil = issuedAt + QUOTE_TTL_SECONDS;
-  const linkId = keccak256(stringToHex(slug));
-  const requiredWei = (await client.readContract({
-    address: XRPL_EVM_PAY_ADDRESS as `0x${string}`,
-    abi: RAILSPLIT_PAY_XRP_ABI,
-    functionName: "quote",
-    args: [slug, xrpUsdPrice],
-  })) as bigint;
 
-  const account = privateKeyToAccount(quoteSignerKey as `0x${string}`);
-  const signature = await account.signTypedData({
-    domain: {
-      name: "RailSplit XRP Quote",
-      version: "1",
-      chainId: xrplevmTestnet.id,
-      verifyingContract: XRPL_EVM_PAY_ADDRESS as `0x${string}`,
-    },
-    types: {
-      PaymentQuote: [
-        { name: "linkId", type: "bytes32" },
-        { name: "priceUsdCents", type: "uint64" },
-        { name: "xrpUsdPrice", type: "uint256" },
-        { name: "issuedAt", type: "uint64" },
-        { name: "validUntil", type: "uint64" },
-      ],
-    },
-    primaryType: "PaymentQuote",
-    message: {
-      linkId,
-      priceUsdCents: link.priceUsdCents,
-      xrpUsdPrice,
-      issuedAt,
-      validUntil,
-    },
-  });
+  let signature: `0x${string}`;
+  try {
+    const account = privateKeyToAccount(quoteSignerKey as `0x${string}`);
+    signature = await account.signTypedData({
+      domain: {
+        name: "RailSplit XRP Quote",
+        version: "1",
+        chainId: xrplevmTestnet.id,
+        verifyingContract: XRPL_EVM_PAY_ADDRESS as `0x${string}`,
+      },
+      types: {
+        PaymentQuote: [
+          { name: "linkId", type: "bytes32" },
+          { name: "priceUsdCents", type: "uint64" },
+          { name: "xrpUsdPrice", type: "uint256" },
+          { name: "issuedAt", type: "uint64" },
+          { name: "validUntil", type: "uint64" },
+        ],
+      },
+      primaryType: "PaymentQuote",
+      message: {
+        linkId,
+        priceUsdCents: link.priceUsdCents,
+        xrpUsdPrice,
+        issuedAt,
+        validUntil,
+      },
+    });
+  } catch {
+    return Response.json({ error: "The XRP quote service is temporarily unavailable. Try again in a moment." }, { status: 503 });
+  }
 
   return Response.json({
     railKey: "xrpl-evm-testnet",

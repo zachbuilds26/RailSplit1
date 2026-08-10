@@ -10,6 +10,7 @@ export type RailConfig = {
   key: RailKey;
   label: string;
   routeSegment: string;
+  checkoutSegment: "flare" | "xrpl";
   chain: Chain;
   nativeSymbol: string;
   explorerUrl: string;
@@ -23,6 +24,7 @@ export const rails = {
     key: "coston2",
     label: flareTestnet.name,
     routeSegment: "coston2",
+    checkoutSegment: "flare",
     chain: flareTestnet,
     nativeSymbol: flareTestnet.nativeCurrency.symbol,
     explorerUrl: "https://coston2-explorer.flare.network",
@@ -34,6 +36,7 @@ export const rails = {
     key: "xrpl-evm-testnet",
     label: xrplevmTestnet.name,
     routeSegment: "xrpl-evm-testnet",
+    checkoutSegment: "xrpl",
     chain: xrplevmTestnet,
     nativeSymbol: xrplevmTestnet.nativeCurrency.symbol,
     explorerUrl: xrplevmTestnet.blockExplorers?.default?.url ?? "https://explorer.testnet.xrplevm.org",
@@ -58,7 +61,13 @@ export function getRailByChainId(chainId: number | undefined) {
 }
 
 export function buildCheckoutPath(railKey: RailKey, slug: string) {
-  return railKey === "coston2" ? `/pay/${slug}` : `/pay/${railKey}/${slug}`;
+  return `/pay/${rails[railKey].checkoutSegment}/${slug}`;
+}
+
+export function getRailByCheckoutSegment(segment: string | null | undefined) {
+  if (segment === "flare" || segment === "coston2") return rails.coston2;
+  if (segment === "xrpl" || segment === "xrpl-evm-testnet") return rails["xrpl-evm-testnet"];
+  return undefined;
 }
 
 export function buildExplorerTxUrl(railKey: RailKey, hash: string) {

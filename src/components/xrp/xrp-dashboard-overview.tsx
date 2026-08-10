@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useBalance } from "wagmi";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { XrpConnectWallet } from "@/components/xrp/xrp-connect-wallet";
@@ -61,11 +60,6 @@ export function XrpDashboardOverview() {
   const now = useNow();
   const xrpRate = useXrpUsdRate();
   const rateAge = useFeedAge(xrpRate.rate?.updatedAt);
-  const { data: balance } = useBalance({
-    address,
-    chainId: rail.chain.id,
-    query: { enabled: Boolean(address), refetchInterval: 15000 },
-  });
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [copyFailed, setCopyFailed] = useState(false);
   const [linksPage, setLinksPage] = useState(0);
@@ -199,7 +193,7 @@ export function XrpDashboardOverview() {
         </div>
       )}
 
-      <section className="mt-8 grid gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-8 grid gap-px overflow-hidden border border-line bg-line sm:grid-cols-3">
         <article className="bg-surface p-5">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">Settled</p>
           {isLoading ? <Skeleton className="mt-5 h-8 w-28" /> : <p className="price-figure mt-5 text-xl sm:text-2xl">{formatUsdCents(totals.collectedUsdCents)}</p>}
@@ -214,12 +208,6 @@ export function XrpDashboardOverview() {
           <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">Open links</p>
           {isLoading ? <Skeleton className="mt-5 h-8 w-14" /> : <p className="price-figure mt-5 text-xl sm:text-2xl">{String(totals.active).padStart(2, "0")}</p>}
           {isLoading ? <Skeleton className="mt-2 h-3 w-20" /> : <p className="mt-2 text-xs text-muted">{links.length} created</p>}
-        </article>
-
-        <article className="bg-surface p-5">
-          <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">Balance</p>
-          {balance ? <p className="price-figure mt-5 text-xl sm:text-2xl">{formatCoin(balance.value, 2)} {balance.symbol}</p> : <Skeleton className="mt-5 h-8 w-28" />}
-          <p className="mt-2 text-xs text-muted">Connected wallet balance</p>
         </article>
 
         <article className="bg-surface p-5">

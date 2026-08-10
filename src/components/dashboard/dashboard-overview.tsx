@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { useWalletController } from "@/components/wallet/wallet-controller";
-import { explorerAddress, railsplitChain, shortenAddress } from "@/lib/chain";
+import { buildCheckoutPath, explorerAddress, railsplitChain, shortenAddress } from "@/lib/chain";
 import { formatReadError } from "@/lib/railsplit-errors";
 import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
 import {
@@ -105,7 +105,7 @@ export function DashboardOverview() {
   async function copyLink(slug: string) {
     try {
       setCopyFailed(false);
-      await navigator.clipboard.writeText(`${window.location.origin}/pay/${slug}`);
+      await navigator.clipboard.writeText(`${window.location.origin}${buildCheckoutPath("coston2", slug)}`);
       setCopiedSlug(slug);
       window.setTimeout(() => setCopiedSlug(null), 1800);
     } catch {
@@ -439,7 +439,7 @@ export function DashboardOverview() {
                             />
                           </button>
                           <Link
-                            href={`/pay/${link.slug}`}
+                            href={buildCheckoutPath("coston2", link.slug)}
                             aria-label={`Open the ${link.title} checkout`}
                             className="grid size-8 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
                           >

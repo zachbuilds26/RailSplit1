@@ -9,7 +9,7 @@ import { XrpConnectWallet } from "@/components/xrp/xrp-connect-wallet";
 import { buildExplorerTxUrl, getRail } from "@/lib/chain";
 import { formatReadError } from "@/lib/railsplit-errors";
 import { formatCoin, formatUsdCents, isExpired, useNow } from "@/lib/use-railsplit";
-import { useXrpPayLink, useXrpPaymentLink, useXrpPaymentQuote, type XrpAccountMode } from "@/lib/use-xrp-railsplit";
+import { useXrpPayLink, useXrpPaymentLink, useXrpPaymentQuote, type XrpAccountMode, type XrpPaymentLink } from "@/lib/use-xrp-railsplit";
 
 const rail = getRail("xrpl-evm-testnet");
 
@@ -49,15 +49,16 @@ export function XrpCheckoutExperience({ slug }: { slug: string }) {
 
   return (
     <CheckoutShell>
-      <CheckoutCard slug={slug} />
+      <CheckoutCard slug={slug} link={link} />
     </CheckoutShell>
   );
 }
 
-function CheckoutCard({ slug }: { slug: string }) {
+function CheckoutCard({ slug, link }: { slug: string; link: XrpPaymentLink }) {
   const { isConnected, chainId, address } = useAccount();
   const onCorrectChain = isConnected && chainId === rail.chain.id;
   const [mode, setMode] = useState<XrpAccountMode>("eoa");
+  const [failure, setFailure] = useState("");
   const quote = useXrpPaymentQuote(slug, onCorrectChain);
   const payment = useXrpPayLink(slug, mode);
   const now = useNow();
@@ -69,7 +70,7 @@ function CheckoutCard({ slug }: { slug: string }) {
   });
 
   if (payment.isConfirmed && payment.hash) {
-    return <PaidReceipt slug={slug} hash={payment.hash} />;
+    return <PaidReceipt link={link} hash={payment.hash} />;
   }
 
   const requiredWei = quote.quote?.requiredWei;
@@ -86,17 +87,31 @@ function CheckoutCard({ slug }: { slug: string }) {
   async function handlePay() {
     if (!quote.quote || quote.error || quote.isFetching) return;
 
+    setFailure("");
+
     const latestLink = await refetchLink();
-    if (latestLink.error || !latestLink.data) return;
-    if (!latestLink.data.active || isExpired(latestLink.data.expiresAt, now)) return;
+    if (latestLink.error || !latestLink.data) {
+      setFailure(formatReadError(latestLink.error, "RailSplit could not refresh this payment link. Try again."));
+      return;
+    }
+    if (!latestLink.data.active) {
+      setFailure(latestLink.data.paymentCount > 0 ? "This payment link has already been completed." : "The merchant closed this payment link.");
+      return;
+    }
+    if (isExpired(latestLink.data.expiresAt, now)) {
+      setFailure("This payment link expired before payment could be confirmed.");
+      return;
+    }
 
     const refreshedQuote = await quote.refetch();
-    if (refreshedQuote.error || !refreshedQuote.data) return;
+    if (refreshedQuote.error || !refreshedQuote.data) {
+      return;
+    }
 
     try {
       await payment.pay(refreshedQuote.data);
-    } catch {
-      return;
+    } catch (error) {
+      setFailure(readableError(error));
     }
   }
 
@@ -115,7 +130,7 @@ function CheckoutCard({ slug }: { slug: string }) {
       <div className="p-5 sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-medium tracking-[-0.045em]">{quote.quote?.title ?? "Payment"}</h1>
+            <h1 className="text-2xl font-medium tracking-[-0.045em]">{link.title}</h1>
             <p className="mt-1 text-xs text-muted">Smart accounts are available when your wallet supports them.</p>
           </div>
           <div className="inline-flex border border-line bg-background-deep p-1 text-[10px] font-semibold uppercase tracking-[0.14em]">
@@ -138,7 +153,7 @@ function CheckoutCard({ slug }: { slug: string }) {
 
         <div className="mt-7 border-y border-line py-5">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">Amount due</p>
-          <p className="price-figure mt-2 text-xl sm:text-2xl">{formatUsdCents(quote.quote?.priceUsdCents)}</p>
+          <p className="price-figure mt-2 text-xl sm:text-2xl">{formatUsdCents(link.priceUsdCents)}</p>
 
           <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-line pt-4">
             <span className="text-xs text-muted">Estimated in XRP</span>
@@ -216,7 +231,7 @@ function CheckoutCard({ slug }: { slug: string }) {
               {payment.isConfirming && "Processing payment…"}
               {!busy && (
                 <>
-                  Pay <span className="price-figure">{formatUsdCents(quote.quote?.priceUsdCents)}</span>
+                  Pay <span className="price-figure">{formatUsdCents(link.priceUsdCents)}</span>
                   <Icon name="arrow-up-right" className="size-4" />
                 </>
               )}
@@ -239,11 +254,11 @@ function CheckoutCard({ slug }: { slug: string }) {
               </p>
             )}
 
-            {(quote.error || payment.error) && (
+            {!quote.error && (failure || payment.error) && (
               <ReadFailure
                 className="mt-4"
                 title="The payment could not be completed."
-                copy={readableError(quote.error ?? payment.error)}
+                copy={failure || readableError(payment.error)}
               />
             )}
           </>
@@ -253,15 +268,15 @@ function CheckoutCard({ slug }: { slug: string }) {
   );
 }
 
-function PaidReceipt({ slug, hash }: { slug: string; hash: `0x${string}` }) {
+function PaidReceipt({ link, hash }: { link: XrpPaymentLink; hash: `0x${string}` }) {
   return (
     <section className="border border-line bg-surface p-5 text-center sm:p-7">
       <span className="mx-auto grid size-12 place-items-center bg-success text-background">
         <Icon name="check" className="size-6" />
       </span>
       <p className="mt-6 text-[10px] font-semibold tracking-[0.15em] text-success uppercase">Payment complete</p>
-      <h1 className="price-figure mt-3 text-xl sm:text-2xl">{slug} confirmed.</h1>
-      <p className="mt-3 text-sm text-muted">Your XRP payment landed onchain.</p>
+      <h1 className="mt-3 text-xl sm:text-2xl">{link.title} confirmed.</h1>
+      <p className="mt-3 text-sm text-muted">{formatUsdCents(link.priceUsdCents)} settled in XRP onchain.</p>
 
       <div className="mt-7 border-y border-line py-4 text-left text-sm">
         <div className="flex items-center justify-between gap-3">

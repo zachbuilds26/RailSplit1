@@ -7,7 +7,8 @@ import { Icon } from "@/components/ui/icon";
 import { XrpConnectWallet } from "@/components/xrp/xrp-connect-wallet";
 import { buildCheckoutPath, buildExplorerTxUrl, getRail } from "@/lib/chain";
 import { formatWriteError } from "@/lib/railsplit-errors";
-import { formatUsdCents } from "@/lib/use-railsplit";
+import { formatCoin, formatUsdCents } from "@/lib/use-railsplit";
+import { quoteUsdCentsToXrpWei, useXrpUsdRate } from "@/lib/use-xrp-railsplit";
 import { XRPL_EVM_PAY_ADDRESS } from "@/lib/xrp-contract-address";
 import { RAILSPLIT_PAY_XRP_ABI } from "@/lib/railsplit-pay-xrp-abi";
 
@@ -62,6 +63,10 @@ export function XrpPaymentLinkForm() {
   const parsedAmount = parseUsdAmountToCents(amount);
   const priceUsdCents = parsedAmount.cents ?? 0n;
   const validAmount = parsedAmount.cents !== undefined;
+  const xrpRate = useXrpUsdRate();
+  const previewWei = validAmount
+    ? quoteUsdCentsToXrpWei(priceUsdCents, xrpRate.rate?.xrpUsdPrice, xrpRate.rate?.quoteDecimals)
+    : undefined;
 
   const preview = {
     title: title.trim() || "Untitled payment",
@@ -78,7 +83,7 @@ export function XrpPaymentLinkForm() {
         <h1 className="font-display mt-6 text-3xl tracking-[-0.045em]">Your XRP payment link is live.</h1>
         <p className="mt-3 text-sm text-muted">
           {(submittedLink?.title ?? preview.title) + " at "}
-          <span className="price-figure">${Number(submittedLink?.cents ?? preview.cents) / 100}</span>
+          <span className="price-figure">{formatUsdCents(submittedLink?.cents ?? preview.cents)}</span>
         </p>
         <a
           href={buildExplorerTxUrl(rail.key, hash)}
@@ -229,7 +234,7 @@ export function XrpPaymentLinkForm() {
             <label className="grid gap-2 text-sm">
               <span>Payment URL</span>
               <div className="flex border border-line bg-background focus-within:border-accent">
-                <span className="shrink-0 border-r border-line px-3.5 py-3 text-xs text-muted">/pay/xrpl-evm-testnet/</span>
+                <span className="shrink-0 border-r border-line px-3.5 py-3 text-xs text-muted">/pay/xrpl/</span>
                 <input
                   value={slug}
                   onChange={(event) =>
@@ -315,8 +320,13 @@ export function XrpPaymentLinkForm() {
             <div className="mt-6 border-y border-line py-4">
               <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">Amount due</p>
               <p className="price-figure mt-2 text-xl sm:text-2xl">{formatUsdCents(preview.cents)}</p>
+              {previewWei !== undefined && priceUsdCents > 0n && (
+                <p className="mt-2 text-xs text-muted tabular-nums">
+                  Approx. {formatCoin(previewWei, 2)} {rail.nativeSymbol} at the current rate
+                </p>
+              )}
               <p className="mt-2 text-xs text-muted tabular-nums">
-                XRP quote will be signed at checkout time.
+                Final XRP amount is set by a signed quote at checkout.
               </p>
             </div>
             <div className="mt-5 flex items-center justify-between text-xs">

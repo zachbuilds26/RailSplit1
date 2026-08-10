@@ -102,9 +102,9 @@ RailSplit also has a separate XRP testnet rail. The deploy script reads env valu
 - `XRP_QUOTE_SIGNER_PRIVATE_KEY` — optional, used by the XRP deploy script and the XRP quote API
 - `XRP_RPC_URL` — optional, defaults to `https://rpc.testnet.xrplevm.org`
 - `XRP_EXPLORER_URL` — optional, defaults to `https://explorer.testnet.xrplevm.org`
-- `XRP_PRICE_SOURCE_URL` — optional, defaults to the CoinGecko XRP/USD endpoint; used by both checkout quotes and the public dashboard rate
-- `XRP_QUOTE_TTL_SECONDS` — optional, defaults to `60`
+- `XRP_QUOTE_TTL_SECONDS` — optional, defaults to `60` and is capped at the contract's 60-second maximum
 - XRP/USD prices always use 8 decimal places to match the deployed XRP contract
+- XRP/USD is read live from CoinGecko, then Coinbase, then Bitstamp if a source is unavailable
 
 ### Deploy XRP
 
