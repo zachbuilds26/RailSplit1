@@ -3,14 +3,11 @@ import { createPublicClient, http, keccak256, stringToHex } from "viem";
 import { xrplevmTestnet } from "viem/chains";
 import { RAILSPLIT_PAY_XRP_ABI } from "@/lib/railsplit-pay-xrp-abi";
 import { XRPL_EVM_PAY_ADDRESS } from "@/lib/xrp-contract-address";
+import { fetchXrpUsdRate, XRP_USD_PRICE_DECIMALS } from "@/lib/xrp-rate";
 
 export const dynamic = "force-dynamic";
 
 const RPC_URL = process.env.XRP_RPC_URL || "https://rpc.testnet.xrplevm.org";
-const PRICE_SOURCE_URL =
-  process.env.XRP_PRICE_SOURCE_URL ||
-  "https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd";
-const QUOTE_DECIMALS = readPositiveInteger(process.env.XRP_QUOTE_DECIMALS, 8);
 const QUOTE_TTL_SECONDS = BigInt(readPositiveInteger(process.env.XRP_QUOTE_TTL_SECONDS, 60));
 
 function readPositiveInteger(value: string | undefined, fallback: number) {
@@ -75,23 +72,14 @@ export async function GET(request: Request) {
     return Response.json({ error: "This XRP checkout link could not be found." }, { status: 404 });
   }
 
-  const priceResponse = await fetch(PRICE_SOURCE_URL, {
-    headers: { accept: "application/json" },
-    cache: "no-store",
-  });
-
-  if (!priceResponse.ok) {
-    return Response.json({ error: "The XRP price source is unavailable." }, { status: 502 });
+  let xrpUsdPrice: bigint;
+  try {
+    xrpUsdPrice = (await fetchXrpUsdRate()).xrpUsdPrice;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "The XRP price source is unavailable.";
+    return Response.json({ error: message }, { status: 502 });
   }
 
-  const priceData = (await priceResponse.json()) as { ripple?: { usd?: number } };
-  const xrpUsd = priceData.ripple?.usd;
-
-  if (typeof xrpUsd !== "number" || !Number.isFinite(xrpUsd) || xrpUsd <= 0) {
-    return Response.json({ error: "The XRP price source returned an invalid value." }, { status: 502 });
-  }
-
-  const xrpUsdPrice = BigInt(Math.max(1, Math.round(xrpUsd * 10 ** QUOTE_DECIMALS)));
   const issuedAt = BigInt(Math.floor(Date.now() / 1000));
   const validUntil = issuedAt + QUOTE_TTL_SECONDS;
   const linkId = keccak256(stringToHex(slug));
@@ -141,7 +129,7 @@ export async function GET(request: Request) {
     issuedAt: issuedAt.toString(),
     validUntil: validUntil.toString(),
     signature,
-    quoteDecimals: QUOTE_DECIMALS,
+    quoteDecimals: XRP_USD_PRICE_DECIMALS,
     chainId: xrplevmTestnet.id,
     contractAddress: XRPL_EVM_PAY_ADDRESS,
   });

@@ -29,6 +29,12 @@ const contract = {
 
 export type XrpAccountMode = "eoa" | "smart-account";
 
+export type XrpUsdRate = {
+  xrpUsdPrice: bigint;
+  quoteDecimals: number;
+  updatedAt: bigint;
+};
+
 export type XrpPaymentLink = {
   merchant: `0x${string}`;
   priceUsdCents: bigint;
@@ -100,6 +106,40 @@ export function useXrpPaymentLink(slug: string) {
     isLoading: query.isLoading,
     error: query.error,
     notFound: Boolean(query.error),
+    refetch: query.refetch,
+  };
+}
+
+export function useXrpUsdRate() {
+  const query = useQuery({
+    queryKey: ["railsplit-xrp-rate"],
+    refetchInterval: 15000,
+    queryFn: async () => {
+      const response = await fetch("/api/xrp/rate");
+      const data = (await response.json()) as {
+        xrpUsdPrice?: string;
+        quoteDecimals?: number;
+        updatedAt?: string;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "The XRP price source is unavailable.");
+      }
+
+      return {
+        xrpUsdPrice: BigInt(data.xrpUsdPrice ?? "0"),
+        quoteDecimals: data.quoteDecimals ?? 8,
+        updatedAt: BigInt(data.updatedAt ?? "0"),
+      } satisfies XrpUsdRate;
+    },
+  });
+
+  return {
+    rate: query.data,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    error: query.error,
     refetch: query.refetch,
   };
 }

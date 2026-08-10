@@ -102,9 +102,9 @@ RailSplit also has a separate XRP testnet rail. The deploy script reads env valu
 - `XRP_QUOTE_SIGNER_PRIVATE_KEY` — optional, used by the XRP deploy script and the XRP quote API
 - `XRP_RPC_URL` — optional, defaults to `https://rpc.testnet.xrplevm.org`
 - `XRP_EXPLORER_URL` — optional, defaults to `https://explorer.testnet.xrplevm.org`
-- `XRP_PRICE_SOURCE_URL` — optional, defaults to the CoinGecko XRP/USD endpoint
+- `XRP_PRICE_SOURCE_URL` — optional, defaults to the CoinGecko XRP/USD endpoint; used by both checkout quotes and the public dashboard rate
 - `XRP_QUOTE_TTL_SECONDS` — optional, defaults to `60`
-- `XRP_QUOTE_DECIMALS` — optional, defaults to `8`
+- XRP/USD prices always use 8 decimal places to match the deployed XRP contract
 
 ### Deploy XRP
 
@@ -117,7 +117,7 @@ That writes `src/lib/xrp-contract-address.ts` for the app and prints the deploye
 
 ### Run the XRP quote API
 
-Set `XRP_QUOTE_SIGNER_PRIVATE_KEY` in the app runtime environment so `/api/xrp/quote` can sign checkout quotes.
+Set `XRP_QUOTE_SIGNER_PRIVATE_KEY` in the app runtime environment so `/api/xrp/quote` can sign checkout quotes. The public `/api/xrp/rate` dashboard endpoint does not require this key.
 
 ## Deploy the app
 

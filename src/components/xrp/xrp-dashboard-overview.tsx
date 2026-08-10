@@ -9,8 +9,8 @@ import { XrpConnectWallet } from "@/components/xrp/xrp-connect-wallet";
 import { useWalletController } from "@/components/wallet/wallet-controller";
 import { buildCheckoutPath, buildExplorerAddressUrl, getRail, shortenAddress } from "@/lib/chain";
 import { formatReadError } from "@/lib/railsplit-errors";
-import { formatCoin, formatUsdCents, isExpired, useNow } from "@/lib/use-railsplit";
-import { useXrpMerchantLedger } from "@/lib/use-xrp-railsplit";
+import { formatCoin, formatFeedPrice, formatUsdCents, isExpired, useFeedAge, useNow } from "@/lib/use-railsplit";
+import { useXrpMerchantLedger, useXrpUsdRate } from "@/lib/use-xrp-railsplit";
 
 const rail = getRail("xrpl-evm-testnet");
 const LINKS_PAGE_SIZE = 7;
@@ -59,6 +59,8 @@ export function XrpDashboardOverview() {
   const address = wallet.address;
   const { links, payments, isLoading, error, refetch } = useXrpMerchantLedger(address);
   const now = useNow();
+  const xrpRate = useXrpUsdRate();
+  const rateAge = useFeedAge(xrpRate.rate?.updatedAt);
   const { data: balance } = useBalance({
     address,
     chainId: rail.chain.id,
@@ -197,7 +199,7 @@ export function XrpDashboardOverview() {
         </div>
       )}
 
-      <section className="mt-8 grid gap-px overflow-hidden border border-line bg-line sm:grid-cols-3">
+      <section className="mt-8 grid gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 xl:grid-cols-4">
         <article className="bg-surface p-5">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">Settled</p>
           {isLoading ? <Skeleton className="mt-5 h-8 w-28" /> : <p className="price-figure mt-5 text-xl sm:text-2xl">{formatUsdCents(totals.collectedUsdCents)}</p>}
@@ -218,6 +220,23 @@ export function XrpDashboardOverview() {
           <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">Balance</p>
           {balance ? <p className="price-figure mt-5 text-xl sm:text-2xl">{formatCoin(balance.value, 2)} {balance.symbol}</p> : <Skeleton className="mt-5 h-8 w-28" />}
           <p className="mt-2 text-xs text-muted">Connected wallet balance</p>
+        </article>
+
+        <article className="bg-surface p-5">
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">Current rate</p>
+            {rateAge !== undefined && <span className="text-[10px] text-muted tabular-nums">{rateAge}s</span>}
+          </div>
+          {xrpRate.isLoading ? (
+            <Skeleton className="mt-5 h-7 w-32" />
+          ) : (
+            <p className="price-figure mt-5 text-lg sm:text-xl">
+              {xrpRate.error ? "—" : formatFeedPrice(xrpRate.rate?.xrpUsdPrice, xrpRate.rate?.quoteDecimals)}
+            </p>
+          )}
+          <p className="mt-2 text-xs text-muted">
+            {xrpRate.error ? "Rate unavailable" : "Updated from the live price source"}
+          </p>
         </article>
       </section>
 
