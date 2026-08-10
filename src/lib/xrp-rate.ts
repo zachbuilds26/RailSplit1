@@ -4,6 +4,16 @@ export const XRP_USD_PRICE_DECIMALS = 8;
 const PRICE_SCALE = 10n ** BigInt(XRP_USD_PRICE_DECIMALS);
 const PROVIDER_TIMEOUT_MS = 3000;
 
+/** How long the last good XRP price stays usable after every live feed fails. */
+export const XRP_RATE_CACHE_MAX_AGE_MS = 45_000;
+
+let cachedRate: XrpUsdRateCacheEntry | undefined;
+
+type XrpUsdRateCacheEntry = {
+  xrpUsdPrice: bigint;
+  fetchedAtMs: number;
+};
+
 type PriceProvider = {
   name: string;
   url: string;
@@ -73,11 +83,19 @@ export async function fetchXrpUsdRate() {
   for (const provider of PROVIDERS) {
     const xrpUsdPrice = await fetchProviderPrice(provider);
     if (xrpUsdPrice !== undefined) {
+      cachedRate = { xrpUsdPrice, fetchedAtMs: Date.now() };
       return {
         xrpUsdPrice,
-        updatedAt: BigInt(Math.floor(Date.now() / 1000)),
+        updatedAt: BigInt(Math.floor(cachedRate.fetchedAtMs / 1000)),
       };
     }
+  }
+
+  if (cachedRate && Date.now() - cachedRate.fetchedAtMs <= XRP_RATE_CACHE_MAX_AGE_MS) {
+    return {
+      xrpUsdPrice: cachedRate.xrpUsdPrice,
+      updatedAt: BigInt(Math.floor(Date.now() / 1000)),
+    };
   }
 
   throw new XrpRateSourceError();
