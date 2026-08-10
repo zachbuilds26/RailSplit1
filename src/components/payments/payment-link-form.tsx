@@ -183,7 +183,11 @@ export function PaymentLinkForm() {
               <span>Payment title</span>
               <input
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(event) => {
+                  const nextTitle = event.target.value;
+                  setTitle(nextTitle);
+                  setSlug(nextTitle.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""));
+                }}
                 className="border border-line bg-background px-3.5 py-3 text-sm outline-none placeholder:text-faint focus:border-accent"
                 placeholder="e.g. July retainer"
                 aria-invalid={Boolean(errors.title)}
