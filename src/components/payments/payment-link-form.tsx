@@ -170,7 +170,7 @@ export function PaymentLinkForm() {
         <p className="text-[10px] font-semibold tracking-[0.16em] text-faint uppercase">
           Payment links / publish
         </p>
-        <h1 className="font-display mt-3 text-4xl tracking-[-0.045em]">Publish a payment link.</h1>
+        <h1 className="font-display mt-3 text-4xl tracking-[-0.045em]">Publish a C2FLR payment link.</h1>
         <p className="mt-3 text-sm leading-6 text-muted">
           Choose a dollar price, then publish a link customers can use from any wallet.
         </p>
