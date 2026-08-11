@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ShareInvoiceDialog } from "@/components/payments/share-invoice-dialog";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
@@ -72,6 +73,7 @@ export function DashboardOverview() {
   const now = useNow();
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [copyFailed, setCopyFailed] = useState(false);
+  const [shareSlug, setShareSlug] = useState<string | null>(null);
   const [linksPage, setLinksPage] = useState(0);
 
   const LINKS_PAGE_SIZE = 7;
@@ -222,7 +224,8 @@ export function DashboardOverview() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+    <>
+      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
           <p className="text-[10px] font-semibold tracking-[0.16em] text-faint uppercase">
@@ -429,6 +432,14 @@ export function DashboardOverview() {
                         <div className="flex justify-end gap-2">
                           <button
                             type="button"
+                            onClick={() => setShareSlug(link.slug)}
+                            aria-label={`Share the ${link.title} invoice`}
+                            className="grid size-8 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
+                          >
+                            <Icon name="qr" className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => copyLink(link.slug)}
                             aria-label={`Copy the ${link.title} payment link`}
                             className="grid size-8 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
@@ -554,5 +565,14 @@ Recent settlements
         </section>
       </div>
     </div>
+
+      {shareSlug && (
+        <ShareInvoiceDialog
+          slug={shareSlug}
+          title={links.find((link) => link.slug === shareSlug)?.title ?? "Payment link"}
+          onClose={() => setShareSlug(null)}
+        />
+      )}
+    </>
   );
 }

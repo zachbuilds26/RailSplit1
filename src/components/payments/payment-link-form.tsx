@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { Icon } from "@/components/ui/icon";
+import { PaymentLinkQr } from "@/components/ui/payment-link-qr";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { buildCheckoutPath, explorerTx, railsplitChain } from "@/lib/chain";
 import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
@@ -59,6 +60,8 @@ export function PaymentLinkForm() {
     slug: string;
     cents: bigint;
   } | null>(null);
+  const [copiedUrl, setCopiedUrl] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   const { writeContractAsync, isPending } = useWriteContract();
   const [hash, setHash] = useState<`0x${string}` | undefined>();
@@ -85,6 +88,19 @@ export function PaymentLinkForm() {
     const liveSlug = submittedLink?.slug ?? slug;
     const liveTitle = submittedLink?.title ?? preview.title;
     const liveCents = submittedLink?.cents ?? preview.cents;
+    const checkoutPath = buildCheckoutPath(liveSlug);
+    const checkoutUrl = `${window.location.origin}${checkoutPath}`;
+
+    async function copyInvoiceLink() {
+      try {
+        await navigator.clipboard.writeText(checkoutUrl);
+        setCopiedUrl(true);
+        setCopyFailed(false);
+        window.setTimeout(() => setCopiedUrl(false), 1800);
+      } catch {
+        setCopyFailed(true);
+      }
+    }
 
     return (
       <div className="mx-auto max-w-2xl px-5 py-16 text-center sm:px-8">
@@ -104,10 +120,36 @@ export function PaymentLinkForm() {
         >
           {hash.slice(0, 12)}…{hash.slice(-10)}
         </a>
+
+        <div className="mx-auto mt-9 grid max-w-lg gap-6 border border-line bg-surface p-6 text-left sm:grid-cols-[auto_minmax(0,1fr)] sm:p-7">
+          <div className="mx-auto w-fit sm:mx-0">
+            <PaymentLinkQr url={checkoutUrl} size={168} />
+          </div>
+          <div className="flex flex-col justify-center">
+            <p className="text-[10px] font-semibold tracking-[0.15em] text-faint uppercase">
+              Share this invoice
+            </p>
+            <p className="mt-3 break-all text-xs leading-5 text-muted">{checkoutUrl}</p>
+            <button
+              type="button"
+              onClick={() => void copyInvoiceLink()}
+              className="mt-4 inline-flex items-center justify-center gap-2 border border-line px-4 py-2.5 text-sm font-semibold hover:border-line-strong hover:bg-surface-raised"
+            >
+              <Icon name={copiedUrl ? "check" : "copy"} className="size-4" />
+              {copiedUrl ? "Invoice link copied" : "Copy invoice link"}
+            </button>
+            {copyFailed && (
+              <p role="alert" className="mt-3 border border-danger/40 bg-danger/10 p-3 text-xs leading-5 text-danger">
+                Could not copy the link. Copy it manually from above.
+              </p>
+            )}
+          </div>
+        </div>
+
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             type="button"
-            onClick={() => router.push(buildCheckoutPath(liveSlug))}
+            onClick={() => router.push(checkoutPath)}
             className="bg-accent px-5 py-3 text-sm font-semibold text-accent-ink hover:bg-white"
           >
             View checkout

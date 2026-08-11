@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { toPng } from "html-to-image";
+import { useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 import { RailsplitLogo } from "@/components/ui/railsplit-logo";
 import { explorerTx, railsplitChain, shortenAddress } from "@/lib/chain";
@@ -119,11 +120,42 @@ function ReceiptCard({
   payer: `0x${string}`;
   hash: `0x${string}`;
 }) {
+  const printRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadFailed, setDownloadFailed] = useState(false);
+
   const paidAtLabel = paidAt > 0n ? new Date(Number(paidAt) * 1000).toLocaleString() : undefined;
   const rateLabel = `${formatFeedPrice(flrUsdPrice, flrUsdDecimals)} USD`;
 
+  async function downloadPng() {
+    if (!printRef.current) return;
+
+    try {
+      setDownloadFailed(false);
+      setDownloading(true);
+      const dataUrl = await toPng(printRef.current, {
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+        cacheBust: true,
+        skipFonts: true,
+      });
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `railsplit-receipt-${hash.slice(0, 10)}.png`;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch {
+      setDownloadFailed(true);
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   return (
-    <section className="border border-line bg-surface">
+    <>
+      <section className="border border-line bg-surface">
         <div className="border-b border-line px-5 py-5 text-center sm:px-7 sm:py-6">
           <span className="mx-auto grid size-12 place-items-center bg-success text-background">
             <Icon name="check" className="size-6" />
@@ -188,6 +220,20 @@ function ReceiptCard({
         </dl>
 
         <div className="flex flex-col gap-3 border-t border-line p-5 sm:p-7">
+          <button
+            type="button"
+            disabled={downloading}
+            onClick={() => void downloadPng()}
+            className="inline-flex flex-1 items-center justify-center gap-2 bg-accent px-4 py-3 text-sm font-semibold text-accent-ink hover:bg-white disabled:opacity-60"
+          >
+            <Icon name="check" className="size-4" />
+            {downloading ? "Preparing image…" : "Download receipt as PNG"}
+          </button>
+          {downloadFailed && (
+            <p role="alert" className="border border-danger/40 bg-danger/10 p-3 text-xs leading-5 text-danger">
+              Could not render the image. Try again in a moment.
+            </p>
+          )}
           <a
             href={explorerTx(hash)}
             target="_blank"
@@ -211,8 +257,94 @@ function ReceiptCard({
           </Link>
         </div>
       </section>
-    );
+
+      <ReceiptPrintLayout printRef={printRef} title={title} priceUsdCents={priceUsdCents} amountWei={amountWei} rateLabel={rateLabel} paidAtLabel={paidAtLabel} merchant={merchant} payer={payer} hash={hash} />
+    </>
+  );
 }
+
+const ReceiptPrintLayout = ({
+  printRef,
+  title,
+  priceUsdCents,
+  amountWei,
+  rateLabel,
+  paidAtLabel,
+  merchant,
+  payer,
+  hash,
+}: {
+  printRef: React.Ref<HTMLDivElement>;
+  title: string;
+  priceUsdCents: bigint;
+  amountWei: bigint;
+  rateLabel: string;
+  paidAtLabel?: string;
+  merchant: `0x${string}`;
+  payer: `0x${string}`;
+  hash: `0x${string}`;
+}) => {
+  const label = (text: string) => (
+    <p style={{ margin: 0, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#666666" }}>
+      {text}
+    </p>
+  );
+  const row = (name: string, value: React.ReactNode) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, padding: "10px 0", borderBottom: "1px solid #e5e5e5" }}>
+      <span style={{ color: "#555555", fontSize: 13 }}>{name}</span>
+      <span style={{ fontWeight: 600, fontSize: 13, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{value}</span>
+    </div>
+  );
+
+  return (
+    <div
+      ref={printRef}
+      aria-hidden="true"
+      style={{
+        position: "fixed",
+        left: "-9999px",
+        top: 0,
+        width: 420,
+        background: "#ffffff",
+        color: "#111111",
+        fontFamily: "Arial, Helvetica, sans-serif",
+      }}
+    >
+      <div style={{ padding: 32, borderBottom: "1px solid #111111" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>RailSplit</span>
+          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#111111", border: "1px solid #111111", padding: "3px 8px" }}>
+            Receipt
+          </span>
+        </div>
+        <p style={{ margin: "18px 0 0", fontSize: 16, fontWeight: 600 }}>{title}</p>
+        <p style={{ margin: "10px 0 0", fontSize: 30, fontWeight: 700, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>
+          {formatUsdCents(priceUsdCents)}
+        </p>
+        <p style={{ margin: "6px 0 0", fontSize: 12, color: "#666666" }}>
+          Paid in {formatCoin(amountWei)} {railsplitChain.nativeCurrency.symbol}
+        </p>
+      </div>
+
+      <div style={{ padding: "8px 32px 16px" }}>
+        {row("Amount paid", `${formatCoin(amountWei)} ${railsplitChain.nativeCurrency.symbol}`)}
+        {row("Settlement rate", `1 ${railsplitChain.nativeCurrency.symbol} = ${rateLabel}`)}
+        {paidAtLabel && row("Paid at", paidAtLabel)}
+        {row("Merchant", shortenAddress(merchant))}
+        {row("Payer", shortenAddress(payer))}
+        {row("Network", railsplitChain.name)}
+      </div>
+
+      <div style={{ padding: "8px 32px 32px" }}>
+        {label("Transaction")}
+        <p style={{ margin: "6px 0 0", fontSize: 11, fontFamily: "monospace", wordBreak: "break-all", color: "#333333" }}>{hash}</p>
+        <p style={{ margin: "18px 0 0", fontSize: 10, color: "#999999", lineHeight: 1.5 }}>
+          Verified on {railsplitChain.name}. Amounts and rate are set onchain at payment time.
+        </p>
+      </div>
+    </div>
+  );
+};
 
 function Issue({ title, body }: { title: string; body: string }) {
   return (
