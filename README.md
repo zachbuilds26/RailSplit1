@@ -2,6 +2,8 @@
 
 RailSplit is a Next.js app for Flare Testnet Coston2. A merchant can publish one payment link in US dollars. A customer opens the link, connects a wallet, and pays in FLR at the live FTSOv2 rate onchain.
 
+Live demo: https://railsplit.vercel.app
+
 ## What the app has
 
 - Public home page
