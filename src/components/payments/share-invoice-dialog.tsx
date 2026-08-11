@@ -83,7 +83,7 @@ export function ShareInvoiceDialog({
           </button>
         </div>
         <p id="share-invoice-description" className="mt-3 text-sm leading-6 text-muted">
-          Send this QR code or the checkout link to the customer.
+          Scan this QR code or use the checkout link to complete payment.
         </p>
       </div>
 

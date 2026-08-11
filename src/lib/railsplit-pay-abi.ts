@@ -60,7 +60,17 @@ export const RAILSPLIT_PAY_ABI = [
   },
   {
     "inputs": [],
+    "name": "SlugTooLong",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "TitleRequired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TitleTooLong",
     "type": "error"
   },
   {

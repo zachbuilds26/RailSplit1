@@ -95,6 +95,16 @@ select:focus-visible {
   color: var(--accent-ink);
 }
 
+/* Safari only auto-zooms into a form field when its font is under 16px, so
+   keep inputs at 16px on touch screens to avoid the page jumping on focus. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 .font-display {
   font-family: var(--font-chakra), Arial, sans-serif;
   font-weight: 700;

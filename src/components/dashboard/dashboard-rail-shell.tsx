@@ -114,7 +114,7 @@ function DashboardChrome({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-line bg-background/95 px-2 py-2 backdrop-blur lg:hidden" aria-label="Mobile navigation">
+      <nav className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-line bg-background/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden" aria-label="Mobile navigation">
         <Link href="/dashboard" className="flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] text-muted hover:text-ink">
           <Icon name="grid" className="size-4" />
           <span>Overview</span>
@@ -124,7 +124,7 @@ function DashboardChrome({ children }: { children: ReactNode }) {
           <span>New link</span>
         </Link>
         <Link href="/docs" className="flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] text-muted hover:text-ink">
-          <Icon name="link" className="size-4" />
+          <Icon name="book" className="size-4" />
           <span>Docs</span>
         </Link>
         <Link href="/" className="flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] text-muted hover:text-ink">
@@ -133,7 +133,7 @@ function DashboardChrome({ children }: { children: ReactNode }) {
         </Link>
       </nav>
 
-      <main className="lg:ml-72 pb-16 lg:pb-0">{children}</main>
+      <main className="pb-[calc(4rem+env(safe-area-inset-bottom))] lg:ml-72 lg:pb-0">{children}</main>
     </div>
   );
 }

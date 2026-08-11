@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type IconName = "arrow-up-right" | "copy" | "plus" | "check" | "chevron" | "wallet" | "link" | "grid" | "qr";
+type IconName = "arrow-up-right" | "copy" | "plus" | "check" | "chevron" | "wallet" | "link" | "grid" | "qr" | "book" | "receipt";
 
 type IconProps = {
   name: IconName;
@@ -18,6 +18,8 @@ export function Icon({ name, className = "" }: IconProps) {
     link: <><path d="M10 13a4 4 0 0 0 5.7.1l2.2-2.2a4 4 0 0 0-5.7-5.7l-1.3 1.3" /><path d="M14 11a4 4 0 0 0-5.7-.1l-2.2 2.2a4 4 0 0 0 5.7 5.7l1.3-1.3" /></>,
     grid: <><rect x="4" y="4" width="6" height="6" /><rect x="14" y="4" width="6" height="6" /><rect x="4" y="14" width="6" height="6" /><rect x="14" y="14" width="6" height="6" /></>,
     qr: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3z" /><path d="M20 14h1v3h-3v-1" /><path d="M7 14v.01" /><path d="M14 20h.01" /><path d="M20 20h.01" /><path d="M3 21v-3h3" /></>,
+    book: <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>,
+    receipt: <><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" /><path d="M12 17.5v-11" /></>,
   };
 
   return (

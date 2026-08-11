@@ -1,4 +1,5 @@
 const { readEnvValue } = require("./scripts/read-env");
+require("@nomicfoundation/hardhat-ethers");
 
 const deployerKey = readEnvValue("DEPLOYER_PRIVATE_KEY");
 const coston2Accounts = deployerKey ? [deployerKey] : [];
@@ -13,6 +14,10 @@ module.exports = {
     },
   },
   networks: {
+    // Tests read the live FTSOv2 feed, so they run against a Coston2 fork.
+    hardhat: {
+      forking: { url: "https://coston2-api.flare.network/ext/C/rpc" },
+    },
     coston2: {
       url: "https://coston2-api.flare.network/ext/C/rpc",
       chainId: 114,

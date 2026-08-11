@@ -58,6 +58,46 @@ function formatSettlementAge(now: bigint | undefined, paidAt: bigint) {
   return `${Math.max(1, Math.round(seconds / 86400))}d ago`;
 }
 
+function LinkActions({
+  link,
+  copied,
+  onCopy,
+  onShare,
+}: {
+  link: MerchantLink;
+  copied: boolean;
+  onCopy: () => void;
+  onShare: () => void;
+}) {
+  return (
+    <div className="flex justify-end gap-2">
+      <button
+        type="button"
+        onClick={onShare}
+        aria-label={`Share the ${link.title} invoice`}
+        className="grid size-9 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
+      >
+        <Icon name="qr" className="size-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={onCopy}
+        aria-label={`Copy the ${link.title} payment link`}
+        className="grid size-9 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
+      >
+        <Icon name={copied ? "check" : "copy"} className="size-3.5" />
+      </button>
+      <Link
+        href="/receipts"
+        aria-label={`Download receipts for ${link.title}`}
+        className="grid size-9 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
+      >
+        <Icon name="receipt" className="size-3.5" />
+      </Link>
+    </div>
+  );
+}
+
 export function DashboardOverview() {
   const { wallet } = useWalletController();
   const address = wallet.address;
@@ -398,14 +438,40 @@ export function DashboardOverview() {
           )}
 
           {links.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[680px] border-collapse text-left text-sm">
+            <>
+              <ul className="divide-y divide-line md:hidden" aria-label="Payment links">
+                {visibleLinks.map((link) => (
+                  <li
+                    key={link.slug}
+                    className="flex items-center justify-between gap-3 p-4"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{link.title}</p>
+                      <p className="mt-1 truncate text-xs text-muted">
+                        <span className="price-figure">{formatUsdCents(link.priceUsdCents)}</span> · {link.paymentCount} payment
+                        {link.paymentCount === 1 ? "" : "s"}
+                      </p>
+                      <div className="mt-2">
+                        <Status link={link} now={now} />
+                      </div>
+                    </div>
+                    <LinkActions
+                      link={link}
+                      copied={copiedSlug === link.slug}
+                      onCopy={() => copyLink(link.slug)}
+                      onShare={() => setShareSlug(link.slug)}
+                    />
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden overflow-x-auto md:block">
+              <table className="w-full border-collapse text-left text-sm">
                 <caption className="sr-only">Payment links held by the contract</caption>
                 <thead className="border-b border-line text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
                   <tr>
                     <th className="px-5 py-3 font-medium sm:px-6">Link</th>
                     <th className="px-5 py-3 font-medium">Status</th>
-                    <th className="px-5 py-3 font-medium">Settled</th>
+                    <th className="hidden px-5 py-3 font-medium md:table-cell">Settled</th>
                     <th className="px-5 py-3 text-right font-medium sm:px-6">Actions</th>
                   </tr>
                 </thead>
@@ -416,8 +482,8 @@ export function DashboardOverview() {
                       className="border-b border-line/70 last:border-0 hover:bg-surface-hover/40"
                     >
                       <td className="px-5 py-4 sm:px-6">
-                        <p className="font-medium">{link.title}</p>
-                        <p className="mt-1 text-xs text-muted">
+                        <p className="truncate font-medium">{link.title}</p>
+                        <p className="mt-1 truncate text-xs text-muted">
                           <span className="price-figure">{formatUsdCents(link.priceUsdCents)}</span> · {link.paymentCount} payment
                           {link.paymentCount === 1 ? "" : "s"}
                         </p>
@@ -425,44 +491,23 @@ export function DashboardOverview() {
                       <td className="px-5 py-4">
                         <Status link={link} now={now} />
                       </td>
-                      <td className="px-5 py-4 price-figure text-sm">
+                      <td className="hidden px-5 py-4 price-figure text-sm md:table-cell">
                         {formatUsdCents(link.totalReceivedUsdCents)}
                       </td>
                       <td className="px-5 py-4 sm:px-6">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setShareSlug(link.slug)}
-                            aria-label={`Share the ${link.title} invoice`}
-                            className="grid size-8 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
-                          >
-                            <Icon name="qr" className="size-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => copyLink(link.slug)}
-                            aria-label={`Copy the ${link.title} payment link`}
-                            className="grid size-8 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
-                          >
-                            <Icon
-                              name={copiedSlug === link.slug ? "check" : "copy"}
-                              className="size-3.5"
-                            />
-                          </button>
-                          <Link
-                            href={buildCheckoutPath(link.slug)}
-                            aria-label={`Open the ${link.title} checkout`}
-                            className="grid size-8 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
-                          >
-                            <Icon name="arrow-up-right" className="size-3.5" />
-                          </Link>
-                        </div>
+                        <LinkActions
+                          link={link}
+                          copied={copiedSlug === link.slug}
+                          onCopy={() => copyLink(link.slug)}
+                          onShare={() => setShareSlug(link.slug)}
+                        />
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
 
           {links.length > LINKS_PAGE_SIZE && (

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { toPng } from "html-to-image";
+import { toJpeg } from "html-to-image";
 import { useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 import { RailsplitLogo } from "@/components/ui/railsplit-logo";
@@ -127,21 +127,29 @@ function ReceiptCard({
   const paidAtLabel = paidAt > 0n ? new Date(Number(paidAt) * 1000).toLocaleString() : undefined;
   const rateLabel = `${formatFeedPrice(flrUsdPrice, flrUsdDecimals)} USD`;
 
-  async function downloadPng() {
-    if (!printRef.current) return;
+  async function downloadJpeg() {
+    const node = printRef.current;
+    if (!node) return;
 
     try {
       setDownloadFailed(false);
       setDownloading(true);
-      const dataUrl = await toPng(printRef.current, {
+      const dataUrl = await toJpeg(node, {
         backgroundColor: "#ffffff",
         pixelRatio: 2,
         cacheBust: true,
-        skipFonts: true,
+        quality: 0.92,
+        width: node.offsetWidth,
+        height: node.offsetHeight,
+        style: {
+          position: "static",
+          left: "0",
+          top: "0",
+        },
       });
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = `railsplit-receipt-${hash.slice(0, 10)}.png`;
+      link.download = `railsplit-receipt-${hash.slice(0, 10)}.jpg`;
       link.style.display = "none";
       document.body.appendChild(link);
       link.click();
@@ -223,11 +231,11 @@ function ReceiptCard({
           <button
             type="button"
             disabled={downloading}
-            onClick={() => void downloadPng()}
+            onClick={() => void downloadJpeg()}
             className="inline-flex flex-1 items-center justify-center gap-2 bg-accent px-4 py-3 text-sm font-semibold text-accent-ink hover:bg-white disabled:opacity-60"
           >
             <Icon name="check" className="size-4" />
-            {downloading ? "Preparing image…" : "Download receipt as PNG"}
+            {downloading ? "Preparing image…" : "Download receipt as JPEG"}
           </button>
           {downloadFailed && (
             <p role="alert" className="border border-danger/40 bg-danger/10 p-3 text-xs leading-5 text-danger">

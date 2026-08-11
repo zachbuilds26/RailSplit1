@@ -22,6 +22,11 @@ contract RailSplitPay {
     /// A payment is rejected if the feed behind it is older than this.
     uint64 public constant MAX_QUOTE_AGE = 300;
 
+    /// Upper bounds on link identifiers so on-chain state cannot be bloated
+    /// without limit by a spammer paying the small per-byte storage cost.
+    uint256 private constant MAX_SLUG_LENGTH = 64;
+    uint256 private constant MAX_TITLE_LENGTH = 200;
+
     struct PaymentLink {
         address merchant;
         uint64 priceUsdCents;
@@ -91,8 +96,10 @@ contract RailSplitPay {
     event PaymentLinkClosed(bytes32 indexed linkId, address indexed merchant);
 
     error SlugRequired();
+    error SlugTooLong();
     error SlugTaken();
     error TitleRequired();
+    error TitleTooLong();
     error PriceRequired();
     error ExpiryInPast();
     error UnknownLink();
@@ -119,7 +126,9 @@ contract RailSplitPay {
         uint64 expiresAt
     ) external returns (bytes32 linkId) {
         if (bytes(slug).length == 0) revert SlugRequired();
+        if (bytes(slug).length > MAX_SLUG_LENGTH) revert SlugTooLong();
         if (bytes(title).length == 0) revert TitleRequired();
+        if (bytes(title).length > MAX_TITLE_LENGTH) revert TitleTooLong();
         if (priceUsdCents == 0) revert PriceRequired();
         if (expiresAt != 0 && expiresAt <= block.timestamp) revert ExpiryInPast();
 
@@ -171,20 +180,10 @@ contract RailSplitPay {
         link.active = false;
         emit PaymentLinkClosed(linkId, link.merchant);
 
-        // The merchant receives exactly the dollar value they asked for, and
-        // the customer gets the rest back. Customers are expected to send a
-        // little extra to absorb rate movement between the quote and mining,
-        // so keeping that surplus would make every customer overpay.
-        uint256 refund = msg.value - requiredWei;
-
-        (bool merchantPaid, ) = payable(link.merchant).call{value: requiredWei}("");
-        if (!merchantPaid) revert TransferFailed();
-
-        if (refund > 0) {
-            (bool refunded, ) = payable(msg.sender).call{value: refund}("");
-            if (!refunded) revert TransferFailed();
-        }
-
+        // Record the payment and surface its event before any external call.
+        // The link is already inactive, so a re-entering caller cannot pay it
+        // again, but keeping the record write ahead of the transfers makes
+        // the state change structural rather than incidental.
         payments.push(
             Payment({
                 linkId: linkId,
@@ -207,6 +206,20 @@ contract RailSplitPay {
             feedDecimals,
             feedTimestamp
         );
+
+        // The merchant receives exactly the dollar value they asked for, and
+        // the customer gets the rest back. Customers are expected to send a
+        // little extra to absorb rate movement between the quote and mining,
+        // so keeping that surplus would make every customer overpay.
+        uint256 refund = msg.value - requiredWei;
+
+        (bool merchantPaid, ) = payable(link.merchant).call{value: requiredWei}("");
+        if (!merchantPaid) revert TransferFailed();
+
+        if (refund > 0) {
+            (bool refunded, ) = payable(msg.sender).call{value: refund}("");
+            if (!refunded) revert TransferFailed();
+        }
     }
 
     /// Stops a link from accepting further payment. Merchant only.

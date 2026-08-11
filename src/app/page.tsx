@@ -79,26 +79,26 @@ export default function Home() {
         <header className="relative z-10 mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-10">
           <RailsplitLogo />
           <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-muted sm:gap-6" aria-label="Main navigation">
-            <a href="#workflow" className="hover:text-ink">
+            <a href="#workflow" className="py-2 hover:text-ink">
               How it works
             </a>
-            <a href="#faq" className="hover:text-ink">
+            <a href="#faq" className="py-2 hover:text-ink">
               FAQ
             </a>
-            <a href="#why-flare" className="hover:text-ink">
+            <a href="#why-flare" className="py-2 hover:text-ink">
               Why Flare
             </a>
           </nav>
           <div className="flex items-center gap-2">
             <Link
               href="/docs"
-              className="border border-line px-3 py-2 text-xs font-semibold text-ink hover:border-line-strong hover:bg-surface"
+              className="border border-line px-3 py-2.5 text-xs font-semibold text-ink hover:border-line-strong hover:bg-surface"
             >
               Docs
             </Link>
             <Link
               href="/dashboard"
-              className="border border-line px-3 py-2 text-xs font-semibold text-ink hover:border-line-strong hover:bg-surface"
+              className="border border-line px-3 py-2.5 text-xs font-semibold text-ink hover:border-line-strong hover:bg-surface"
             >
               Open dashboard
             </Link>

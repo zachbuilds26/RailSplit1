@@ -206,7 +206,11 @@ export function WalletControllerProvider({ children }: { children: ReactNode }) 
                   className="flex items-center justify-between gap-3 border border-line bg-surface px-4 py-3 text-left text-sm font-semibold hover:border-line-strong hover:bg-surface-hover disabled:opacity-60"
                 >
                   <span className="inline-flex items-center gap-3">
-                    <Icon name="wallet" className="size-4 text-accent" />
+                    {connector.icon ? (
+                      <img src={connector.icon} alt="" className="size-4" />
+                    ) : (
+                      <Icon name="wallet" className="size-4 text-accent" />
+                    )}
                     {connector.name === "Injected" ? "Browser wallet" : connector.name}
                   </span>
                   <span className="text-xs font-normal text-muted">Connect</span>
