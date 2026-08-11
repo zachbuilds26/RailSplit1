@@ -60,13 +60,9 @@ function formatSettlementAge(now: bigint | undefined, paidAt: bigint) {
 
 function LinkActions({
   link,
-  copied,
-  onCopy,
   onShare,
 }: {
   link: MerchantLink;
-  copied: boolean;
-  onCopy: () => void;
   onShare: () => void;
 }) {
   return (
@@ -79,14 +75,13 @@ function LinkActions({
       >
         <Icon name="qr" className="size-3.5" />
       </button>
-      <button
-        type="button"
-        onClick={onCopy}
-        aria-label={`Copy the ${link.title} payment link`}
+      <Link
+        href={buildCheckoutPath(link.slug)}
+        aria-label={`Open the ${link.title} payment link`}
         className="grid size-9 place-items-center border border-line text-muted hover:border-line-strong hover:text-ink"
       >
-        <Icon name={copied ? "check" : "copy"} className="size-3.5" />
-      </button>
+        <Icon name="arrow-up-right" className="size-3.5" />
+      </Link>
       <Link
         href="/receipts"
         aria-label={`Download receipts for ${link.title}`}
@@ -111,8 +106,6 @@ export function DashboardOverview() {
   const feed = useFlrUsdFeed();
   const feedAge = useFeedAge(feed.timestamp);
   const now = useNow();
-  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
-  const [copyFailed, setCopyFailed] = useState(false);
   const [shareSlug, setShareSlug] = useState<string | null>(null);
   const [linksPage, setLinksPage] = useState(0);
 
@@ -142,18 +135,6 @@ export function DashboardOverview() {
 
   function goNextLinksPage() {
     setLinksPage((page) => Math.min(linksTotalPages - 1, page + 1));
-  }
-
-  async function copyLink(slug: string) {
-    try {
-      setCopyFailed(false);
-      await navigator.clipboard.writeText(`${window.location.origin}${buildCheckoutPath(slug)}`);
-      setCopiedSlug(slug);
-      window.setTimeout(() => setCopiedSlug(null), 1800);
-    } catch {
-      setCopyFailed(true);
-      setCopiedSlug(null);
-    }
   }
 
   if (!wallet.isReady && wallet.phase !== "disconnected") {
@@ -457,8 +438,6 @@ export function DashboardOverview() {
                     </div>
                     <LinkActions
                       link={link}
-                      copied={copiedSlug === link.slug}
-                      onCopy={() => copyLink(link.slug)}
                       onShare={() => setShareSlug(link.slug)}
                     />
                   </li>
@@ -497,8 +476,6 @@ export function DashboardOverview() {
                       <td className="px-5 py-4 sm:px-6">
                         <LinkActions
                           link={link}
-                          copied={copiedSlug === link.slug}
-                          onCopy={() => copyLink(link.slug)}
                           onShare={() => setShareSlug(link.slug)}
                         />
                       </td>
@@ -536,9 +513,6 @@ export function DashboardOverview() {
             </div>
           )}
 
-          <p aria-live="polite" className="sr-only">
-            {copiedSlug ? "Payment link copied" : copyFailed ? "Could not copy the link" : ""}
-          </p>
         </section>
 
         <section className="border border-line bg-surface p-5 sm:p-6" aria-labelledby="activity-title">

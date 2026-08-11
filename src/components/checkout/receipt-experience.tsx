@@ -147,9 +147,15 @@ function ReceiptCard({
           top: "0",
         },
       });
+      const fileName = `railsplit-receipt-${
+        title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "") || hash.slice(0, 10)
+      }.jpg`;
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = `railsplit-receipt-${hash.slice(0, 10)}.jpg`;
+      link.download = fileName;
       link.style.display = "none";
       document.body.appendChild(link);
       link.click();
@@ -251,7 +257,7 @@ function ReceiptCard({
             View on explorer
           </a>
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex flex-1 items-center justify-center border border-line px-4 py-3 text-sm font-semibold hover:border-line-strong hover:bg-surface-raised"
           >
             Done

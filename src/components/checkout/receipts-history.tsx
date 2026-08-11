@@ -94,7 +94,7 @@ export function ReceiptsHistory() {
         </section>
 
         <Link
-          href="/"
+          href="/dashboard"
           className="mt-7 inline-flex w-full items-center justify-center border border-line py-3 text-sm font-semibold hover:border-line-strong hover:bg-surface-raised"
         >
           Return home
