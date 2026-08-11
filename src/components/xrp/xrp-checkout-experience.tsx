@@ -9,7 +9,7 @@ import { XrpConnectWallet } from "@/components/xrp/xrp-connect-wallet";
 import { buildExplorerTxUrl, getRail } from "@/lib/chain";
 import { formatReadError } from "@/lib/railsplit-errors";
 import { formatCoin, formatUsdCents, isExpired, useNow } from "@/lib/use-railsplit";
-import { useXrpPayLink, useXrpPaymentLink, useXrpPaymentQuote, type XrpAccountMode, type XrpPaymentLink } from "@/lib/use-xrp-railsplit";
+import { useXrpPayLink, useXrpPaymentLink, useXrpPaymentQuote, type XrpPaymentLink } from "@/lib/use-xrp-railsplit";
 
 const rail = getRail("xrpl-evm-testnet");
 
@@ -74,10 +74,9 @@ function CheckoutCard({
 }) {
   const { isConnected, chainId, address } = useAccount();
   const onCorrectChain = isConnected && chainId === rail.chain.id;
-  const [mode, setMode] = useState<XrpAccountMode>("eoa");
   const [failure, setFailure] = useState("");
   const quote = useXrpPaymentQuote(slug, onCorrectChain);
-  const payment = useXrpPayLink(slug, mode);
+  const payment = useXrpPayLink(slug);
   const now = useNow();
   const { refetch: refetchLink } = useXrpPaymentLink(slug);
   const { data: balance, isLoading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance({
@@ -154,23 +153,6 @@ function CheckoutCard({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-medium tracking-[-0.045em]">{link.title}</h1>
-            <p className="mt-1 text-xs text-muted">Smart accounts are available when your wallet supports them.</p>
-          </div>
-          <div className="inline-flex border border-line bg-background-deep p-1 text-[10px] font-semibold uppercase tracking-[0.14em]">
-            <button
-              type="button"
-              onClick={() => setMode("eoa")}
-              className={`px-3 py-1.5 ${mode === "eoa" ? "bg-accent text-accent-ink" : "text-muted"}`}
-            >
-              EOA
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("smart-account")}
-              className={`px-3 py-1.5 ${mode === "smart-account" ? "bg-accent text-accent-ink" : "text-muted"}`}
-            >
-              Smart account
-            </button>
           </div>
         </div>
 
@@ -249,8 +231,7 @@ function CheckoutCard({
               onClick={() => void handlePay()}
               className="mt-4 inline-flex w-full items-center justify-center gap-2 bg-accent px-5 py-3.5 text-sm font-semibold text-accent-ink hover:bg-white disabled:opacity-60"
             >
-              {payment.isSubmitting && mode === "smart-account" && "Sending smart account call…"}
-              {payment.isSubmitting && mode !== "smart-account" && "Approve in your wallet…"}
+              {payment.isSubmitting && "Approve in your wallet…"}
               {payment.isConfirming && "Processing payment…"}
               {!busy && (
                 <>
@@ -260,7 +241,7 @@ function CheckoutCard({
               )}
             </button>
 
-            {payment.hash && payment.isConfirming && mode !== "smart-account" && (
+            {payment.hash && payment.isConfirming && (
               <a
                 href={buildExplorerTxUrl(rail.key, payment.hash)}
                 target="_blank"
@@ -269,12 +250,6 @@ function CheckoutCard({
               >
                 Track the transaction
               </a>
-            )}
-
-            {payment.isConfirming && mode === "smart-account" && (
-              <p className="mt-3 text-center text-xs text-muted">
-                Smart account call submitted{payment.smartAccountId ? ` (${payment.smartAccountId})` : ""}. Waiting for the transaction receipt…
-              </p>
             )}
 
             {!quote.error && (failure || payment.error) && (

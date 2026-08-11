@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import {
-  encodeFunctionData,
   keccak256,
   parseEventLogs,
   stringToHex,
@@ -20,15 +19,11 @@ import { xrplEvmTestnetChain } from "@/lib/chain";
 import { XRPL_EVM_PAY_ADDRESS } from "@/lib/xrp-contract-address";
 import { isUnknownLinkError } from "@/lib/railsplit-errors";
 import { RAILSPLIT_PAY_XRP_ABI } from "@/lib/railsplit-pay-xrp-abi";
-import { useXrpSmartAccountExecutor } from "@/lib/xrp-smart-account";
-
 const contract = {
   address: XRPL_EVM_PAY_ADDRESS as `0x${string}`,
   abi: RAILSPLIT_PAY_XRP_ABI,
   chainId: xrplEvmTestnetChain.id,
 } as const;
-
-export type XrpAccountMode = "eoa" | "smart-account";
 
 export type XrpUsdRate = {
   xrpUsdPrice: bigint;
@@ -202,18 +197,15 @@ export function useXrpPaymentQuote(slug: string, enabled = true) {
   };
 }
 
-export function useXrpPayLink(slug: string, mode: XrpAccountMode = "eoa") {
+export function useXrpPayLink(slug: string) {
   const { address } = useAccount();
   const { writeContractAsync, isPending: isWritePending, error: writeError, reset } = useWriteContract();
-  const smartAccount = useXrpSmartAccountExecutor();
   const [hash, setHash] = useState<`0x${string}` | undefined>();
 
   const transactionReceipt = useWaitForTransactionReceipt({
     hash,
     chainId: xrplEvmTestnetChain.id,
   });
-
-  const smartReceipt = smartAccount.status.data?.receipts?.[0];
 
   const pay = useCallback(
     async (quote: XrpPaymentQuote) => {
@@ -226,29 +218,9 @@ export function useXrpPayLink(slug: string, mode: XrpAccountMode = "eoa") {
       }
 
       setHash(undefined);
-      smartAccount.clear();
       reset();
 
       const args = [quote.slug, quote.xrpUsdPrice, quote.issuedAt, quote.validUntil, quote.signature] as const;
-
-      if (mode === "smart-account") {
-        const call = {
-          to: XRPL_EVM_PAY_ADDRESS as `0x${string}`,
-          data: encodeFunctionData({
-            abi: RAILSPLIT_PAY_XRP_ABI,
-            functionName: "pay",
-            args,
-          }),
-          value: quote.requiredWei,
-        } as const;
-
-        await smartAccount.submitCalls({
-          account: address,
-          chainId: xrplEvmTestnetChain.id,
-          calls: [call],
-        });
-        return smartAccount.callsId;
-      }
 
       const txHash = await writeContractAsync({
         ...contract,
@@ -260,27 +232,22 @@ export function useXrpPayLink(slug: string, mode: XrpAccountMode = "eoa") {
       setHash(txHash);
       return txHash;
     },
-    [address, mode, reset, smartAccount, writeContractAsync],
+    [address, reset, writeContractAsync],
   );
 
   const clear = useCallback(() => {
     setHash(undefined);
-    smartAccount.clear();
     reset();
-  }, [reset, smartAccount]);
+  }, [reset]);
 
-  const receipt = mode === "smart-account" ? smartReceipt : transactionReceipt.data;
+  const receipt = transactionReceipt.data;
   const receiptLogs = useMemo(
     () => (receipt?.logs ?? []) as unknown as Parameters<typeof parseEventLogs>[0]["logs"],
     [receipt],
   );
 
   const validation = useMemo(() => {
-    if (mode === "smart-account" && !smartReceipt) {
-      return { status: "checking" as const };
-    }
-
-    if (mode !== "smart-account" && hash && transactionReceipt.isError) {
+    if (hash && transactionReceipt.isError) {
       return {
         status: "invalid" as const,
         message: transactionReceipt.error?.message ?? "The XRP payment could not be confirmed.",
@@ -291,7 +258,7 @@ export function useXrpPayLink(slug: string, mode: XrpAccountMode = "eoa") {
       return { status: "idle" as const };
     }
 
-    if ((mode === "smart-account" ? smartAccount.status.isError : transactionReceipt.isError) || !receiptLogs.length) {
+    if (transactionReceipt.isError || !receiptLogs.length) {
       return {
         status: "invalid" as const,
         message: "The mined transaction did not pay this XRP link.",
@@ -325,28 +292,22 @@ export function useXrpPayLink(slug: string, mode: XrpAccountMode = "eoa") {
         message: "The mined transaction did not pay this XRP link.",
       };
     }
-  }, [hash, mode, receipt, receiptLogs, slug, smartAccount.status.isError, smartReceipt, transactionReceipt.error, transactionReceipt.isError]);
+  }, [hash, receipt, receiptLogs, slug, transactionReceipt.error, transactionReceipt.isError]);
 
-  const transactionHash = mode === "smart-account" ? smartReceipt?.transactionHash : hash;
-  const isSubmitting = mode === "smart-account" ? smartAccount.isSubmitting : isWritePending;
-  const isConfirming =
-    mode === "smart-account"
-      ? Boolean(smartAccount.callsId) && (smartAccount.status.isLoading || !smartReceipt)
-      : Boolean(hash) && (transactionReceipt.isLoading || validation.status === "checking");
-  const isConfirmed = (mode === "smart-account" ? smartAccount.status.isSuccess : transactionReceipt.isSuccess) && validation.status === "valid";
+  const transactionHash = hash;
+  const isSubmitting = isWritePending;
+  const isConfirming = Boolean(hash) && transactionReceipt.isLoading;
+  const isConfirmed = transactionReceipt.isSuccess && validation.status === "valid";
 
   const combinedError =
     writeError ??
-    smartAccount.error ??
     transactionReceipt.error ??
-    smartAccount.status.error ??
     (validation.status === "invalid" ? new Error(validation.message) : undefined);
 
   return {
     pay,
     clear,
     hash: transactionHash,
-    smartAccountId: smartAccount.callsId,
     isSubmitting,
     isConfirming,
     isConfirmed,
