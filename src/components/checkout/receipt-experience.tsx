@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { toJpeg } from "html-to-image";
 import { useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
@@ -135,7 +136,7 @@ function ReceiptCard({
       setDownloadFailed(false);
       setDownloading(true);
       const dataUrl = await toJpeg(node, {
-        backgroundColor: "#ffffff",
+        backgroundColor: "#000000",
         pixelRatio: 2,
         cacheBust: true,
         quality: 0.92,
@@ -298,15 +299,10 @@ const ReceiptPrintLayout = ({
   payer: `0x${string}`;
   hash: `0x${string}`;
 }) => {
-  const label = (text: string) => (
-    <p style={{ margin: 0, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#666666" }}>
-      {text}
-    </p>
-  );
   const row = (name: string, value: React.ReactNode) => (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, padding: "10px 0", borderBottom: "1px solid #e5e5e5" }}>
-      <span style={{ color: "#555555", fontSize: 13 }}>{name}</span>
-      <span style={{ fontWeight: 600, fontSize: 13, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{value}</span>
+    <div className="flex items-center justify-between gap-4 py-4">
+      <dt className="text-muted">{name}</dt>
+      <dd className="text-right font-semibold tabular-nums">{value}</dd>
     </div>
   );
 
@@ -314,47 +310,62 @@ const ReceiptPrintLayout = ({
     <div
       ref={printRef}
       aria-hidden="true"
-      style={{
-        position: "fixed",
-        left: "-9999px",
-        top: 0,
-        width: 420,
-        background: "#ffffff",
-        color: "#111111",
-        fontFamily: "Arial, Helvetica, sans-serif",
-      }}
+      className="fixed top-0 left-[-9999px] w-[420px]"
     >
-      <div style={{ padding: 32, borderBottom: "1px solid #111111" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>RailSplit</span>
-          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#111111", border: "1px solid #111111", padding: "3px 8px" }}>
+      <div className="border border-line bg-surface text-ink">
+        <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-4 sm:px-7">
+          <span className="inline-flex items-center gap-2">
+            <Image
+              src="/railsplit-logo-mark.webp"
+              alt=""
+              width={24}
+              height={24}
+              unoptimized
+              className="object-contain"
+            />
+            <span className="font-display text-base font-semibold tracking-[-0.03em] text-ink">
+              RailSplit
+            </span>
+          </span>
+          <span className="border border-line px-2 py-1 text-[10px] font-semibold tracking-[0.14em] text-muted uppercase">
             Receipt
           </span>
         </div>
-        <p style={{ margin: "18px 0 0", fontSize: 16, fontWeight: 600 }}>{title}</p>
-        <p style={{ margin: "10px 0 0", fontSize: 30, fontWeight: 700, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>
-          {formatUsdCents(priceUsdCents)}
-        </p>
-        <p style={{ margin: "6px 0 0", fontSize: 12, color: "#666666" }}>
-          Paid in {formatCoin(amountWei)} {railsplitChain.nativeCurrency.symbol}
-        </p>
-      </div>
 
-      <div style={{ padding: "8px 32px 16px" }}>
-        {row("Amount paid", `${formatCoin(amountWei)} ${railsplitChain.nativeCurrency.symbol}`)}
-        {row("Settlement rate", `1 ${railsplitChain.nativeCurrency.symbol} = ${rateLabel}`)}
-        {paidAtLabel && row("Paid at", paidAtLabel)}
-        {row("Merchant", shortenAddress(merchant))}
-        {row("Payer", shortenAddress(payer))}
-        {row("Network", railsplitChain.name)}
-      </div>
+        <div className="border-b border-line px-5 py-5 text-center sm:px-7 sm:py-6">
+          <span className="mx-auto grid size-12 place-items-center bg-success text-background">
+            <Icon name="check" className="size-6" />
+          </span>
+          <p className="mt-5 text-[10px] font-semibold tracking-[0.15em] text-success uppercase">
+            Payment receipt
+          </p>
+          <p className="font-display mt-3 text-2xl tracking-[-0.045em]">{title}</p>
+          <p className="price-figure mt-4 text-2xl sm:text-3xl">
+            {formatUsdCents(priceUsdCents)}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            settled in {railsplitChain.nativeCurrency.symbol}
+          </p>
+        </div>
 
-      <div style={{ padding: "8px 32px 32px" }}>
-        {label("Transaction")}
-        <p style={{ margin: "6px 0 0", fontSize: 11, fontFamily: "monospace", wordBreak: "break-all", color: "#333333" }}>{hash}</p>
-        <p style={{ margin: "18px 0 0", fontSize: 10, color: "#999999", lineHeight: 1.5 }}>
-          Verified on {railsplitChain.name}. Amounts and rate are set onchain at payment time.
-        </p>
+        <dl className="divide-y divide-line px-5 text-sm sm:px-7">
+          {row("Amount paid", `${formatCoin(amountWei)} ${railsplitChain.nativeCurrency.symbol}`)}
+          {row("Settlement rate", `1 ${railsplitChain.nativeCurrency.symbol} = ${rateLabel}`)}
+          {paidAtLabel && row("Paid at", paidAtLabel)}
+          {row("Merchant", <span className="font-mono text-xs">{shortenAddress(merchant)}</span>)}
+          {row("Payer", <span className="font-mono text-xs">{shortenAddress(payer)}</span>)}
+          {row("Network", railsplitChain.name)}
+        </dl>
+
+        <div className="px-5 py-5 sm:px-7">
+          <p className="text-[10px] font-semibold tracking-[0.15em] text-faint uppercase">
+            Transaction
+          </p>
+          <p className="mt-2 break-all font-mono text-xs text-muted">{hash}</p>
+          <p className="mt-4 text-[10px] leading-5 text-faint">
+            Verified on {railsplitChain.name}. Amounts and rate are set onchain at payment time.
+          </p>
+        </div>
       </div>
     </div>
   );
