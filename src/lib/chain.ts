@@ -6,7 +6,6 @@ import {
   buildExplorerTxUrl,
   buildFaucetUrl,
   getRail,
-  getRailByChainId,
   isRailKey,
   rails,
   type RailConfig,
@@ -38,18 +37,6 @@ export function explorerAddress(address: string) {
   return buildExplorerAddressUrl("coston2", address);
 }
 
-export function explorerTxForRail(railKey: RailKey, hash: string) {
-  return buildExplorerTxUrl(railKey, hash);
-}
-
-export function explorerAddressForRail(railKey: RailKey, address: string) {
-  return buildExplorerAddressUrl(railKey, address);
-}
-
-export function faucetForRail(railKey: RailKey) {
-  return buildFaucetUrl(railKey);
-}
-
 export function shortenAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
@@ -60,7 +47,6 @@ export {
   buildExplorerTxUrl,
   buildFaucetUrl,
   getRail,
-  getRailByChainId,
   isRailKey,
   rails,
   type RailConfig,

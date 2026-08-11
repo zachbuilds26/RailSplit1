@@ -34,11 +34,6 @@ export function getRail(railKey: string | null | undefined = "coston2") {
   return isRailKey(railKey) ? rails[railKey] : rails.coston2;
 }
 
-export function getRailByChainId(chainId: number | undefined) {
-  if (chainId === rails.coston2.chain.id) return rails.coston2;
-  return rails.coston2;
-}
-
 export function buildCheckoutPath(slug: string) {
   return `/pay/${slug}`;
 }
