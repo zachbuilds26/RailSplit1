@@ -11,30 +11,20 @@ import {
   rails,
   type RailConfig,
   type RailKey,
-  type RailPricingMode,
 } from "@/lib/rails";
 
 export const railsplitChain = rails.coston2.chain;
-export const xrplEvmTestnetChain = rails["xrpl-evm-testnet"].chain;
 
-/**
- * RailSplit defaults to Flare Testnet Coston2.
- * The rail registry keeps the current flow intact while allowing XRP to be
- * added as a separate EVM-compatible rail.
- */
 export const EXPLORER_URL = rails.coston2.explorerUrl;
 export const FAUCET_URL = rails.coston2.faucetUrl;
 
 export const wagmiConfig = createConfig({
-  chains: [rails.coston2.chain, rails["xrpl-evm-testnet"].chain],
+  chains: [railsplitChain],
   connectors: [injected({ shimDisconnect: false })],
   multiInjectedProviderDiscovery: true,
   transports: {
-    [rails.coston2.chain.id]: http(
-      rails.coston2.chain.rpcUrls.default.http[0] ?? "https://coston2-api.flare.network/ext/C/rpc",
-    ),
-    [rails["xrpl-evm-testnet"].chain.id]: http(
-      rails["xrpl-evm-testnet"].chain.rpcUrls.default.http[0] ?? "https://rpc.testnet.xrplevm.org",
+    [railsplitChain.id]: http(
+      railsplitChain.rpcUrls.default.http[0] ?? "https://coston2-api.flare.network/ext/C/rpc",
     ),
   },
   ssr: true,
@@ -75,7 +65,6 @@ export {
   rails,
   type RailConfig,
   type RailKey,
-  type RailPricingMode,
 };
 
 declare module "wagmi" {

@@ -5,8 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "compile": "hardhat compile",
-    "deploy:coston2": "hardhat run scripts/deploy.js --network coston2",
-    "deploy:xrplevm": "hardhat run scripts/deploy-xrp.js --network xrplevmTestnet"
+    "deploy:coston2": "hardhat run scripts/deploy.js --network coston2"
   },
   "dependencies": {
     "@flarenetwork/flare-periphery-contracts": "^0.1.52"

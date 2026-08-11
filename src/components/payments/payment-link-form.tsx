@@ -103,7 +103,7 @@ export function PaymentLinkForm() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             type="button"
-            onClick={() => router.push(buildCheckoutPath("coston2", submittedLink?.slug ?? slug))}
+            onClick={() => router.push(buildCheckoutPath(submittedLink?.slug ?? slug))}
             className="bg-accent px-5 py-3 text-sm font-semibold text-accent-ink hover:bg-white"
           >
             View checkout
@@ -245,7 +245,7 @@ export function PaymentLinkForm() {
               <span>Payment URL</span>
               <div className="flex border border-line bg-background focus-within:border-accent">
                 <span className="shrink-0 border-r border-line px-3.5 py-3 text-xs text-muted">
-                  /pay/flare/
+                  /pay/
                 </span>
                 <input
                   value={slug}
@@ -357,7 +357,7 @@ export function PaymentLinkForm() {
               Pay <span className="price-figure">{formatUsdCents(preview.cents)}</span>
             </div>
           </div>
-          <p className="mt-4 break-all text-xs leading-5 text-muted">{buildCheckoutPath("coston2", preview.slug)}</p>
+          <p className="mt-4 break-all text-xs leading-5 text-muted">{buildCheckoutPath(preview.slug)}</p>
         </aside>
       </div>
     </div>

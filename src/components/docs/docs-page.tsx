@@ -44,7 +44,7 @@ const faqItems = [
   {
     question: "Is this live on mainnet?",
     answer:
-      "Not yet. The demo runs on Coston2 today, and XRPL EVM Testnet support is being added alongside it.",
+      "Not yet. The demo runs on Coston2 today.",
   },
 ];
 
@@ -207,7 +207,7 @@ export function DocsPage() {
           <section className="railsplit-docs__section" id="testnet">
             <h2 className="railsplit-docs__section-title">Testnet</h2>
             <p>
-              RailSplit runs on Coston2 for the demo, and XRPL EVM Testnet is the next rail. Use a test wallet and the faucet before trying
+              RailSplit runs on Coston2 for the demo. Use a test wallet and the faucet before trying
               the live flow yourself.
             </p>
             <div className="railsplit-docs__note">

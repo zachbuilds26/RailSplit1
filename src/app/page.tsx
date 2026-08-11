@@ -29,7 +29,7 @@ const faqItems = [
   {
     question: "Is this ready for mainnet?",
     answer:
-      "Not yet. This demo runs on Coston2 today, and XRPL EVM Testnet support is being added alongside it.",
+      "Not yet. This demo runs on Coston2 today.",
   },
   {
     question: "Which wallets work?",
@@ -128,7 +128,7 @@ export default function Home() {
               Create a payment link
             </Link>
             <Link
-              href={buildCheckoutPath("coston2", DEMO_SLUG)}
+              href={buildCheckoutPath(DEMO_SLUG)}
               className="inline-flex w-full items-center justify-center gap-2 border border-line px-5 py-3 text-sm font-semibold hover:border-line-strong hover:bg-surface sm:w-auto"
             >
               Open sample checkout <Icon name="arrow-up-right" className="size-4" />
