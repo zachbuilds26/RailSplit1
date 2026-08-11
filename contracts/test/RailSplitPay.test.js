@@ -4,13 +4,21 @@
 // run against a Coston2 fork (see networks.hardhat.forking in hardhat.config.js).
 //   npm test
 const assert = require("node:assert");
+const { resolveFtsoV2Address } = require("../scripts/resolve-ftso-v2");
 
 const DEFAULT_PRICE_USD_CENTS = 2500n;
 
 async function deploy() {
   const [merchant, customer] = await ethers.getSigners();
   const factory = await ethers.getContractFactory("RailSplitPay");
-  const contract = await factory.deploy();
+
+  // The fork mirrors Coston2 state, so the registered FLR/USD feed address is
+  // read from the on-chain registry rather than hardcoded. EDR refuses to run
+  // a call at the fork block itself, so mine one local block to move "latest"
+  // past it first.
+  await ethers.provider.send("evm_mine", []);
+  const ftsoV2Address = await resolveFtsoV2Address(ethers.provider);
+  const contract = await factory.deploy(ftsoV2Address);
   await contract.waitForDeployment();
 
   // The fork is shared across every test in this file, so signer balances
@@ -193,6 +201,26 @@ describe("RailSplitPay", function () {
       contract.connect(customer).pay("short-lived", { value: requiredWei }),
       "LinkExpired",
     );
+  });
+
+  it("quote refuses an inactive link", async function () {
+    const { contract } = await deploy();
+
+    await contract.createPaymentLink("quote-inactive", "Quote inactive", DEFAULT_PRICE_USD_CENTS, 0n);
+    await contract.closePaymentLink("quote-inactive");
+
+    await expectRevert(contract.quote("quote-inactive"), "LinkInactive");
+  });
+
+  it("quote refuses an expired link", async function () {
+    const { contract } = await deploy();
+    const expiresAt = (await currentBlockTime()) + 3n;
+
+    await contract.createPaymentLink("quote-expired", "Quote expired", DEFAULT_PRICE_USD_CENTS, expiresAt);
+    await ethers.provider.send("evm_increaseTime", [6]);
+    await ethers.provider.send("evm_mine", []);
+
+    await expectRevert(contract.quote("quote-expired"), "LinkExpired");
   });
 
   it("only the merchant can close a link", async function () {

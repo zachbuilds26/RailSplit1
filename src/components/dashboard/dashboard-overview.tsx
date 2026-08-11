@@ -15,6 +15,7 @@ import {
   formatFeedPrice,
   formatUsdCents,
   isExpired,
+  PAYMENTS_COLLECT_LIMIT,
   useFeedAge,
   useFlrUsdFeed,
   useMerchantLedger,
@@ -96,13 +97,15 @@ function LinkActions({
 export function DashboardOverview() {
   const { wallet } = useWalletController();
   const address = wallet.address;
+  const [settlementLimit, setSettlementLimit] = useState(PAYMENTS_COLLECT_LIMIT);
   const {
     links,
     payments,
+    hasMore,
     isLoading,
     error,
     refetch,
-  } = useMerchantLedger(address);
+  } = useMerchantLedger(address, { collectLimit: settlementLimit });
   const feed = useFlrUsdFeed();
   const feedAge = useFeedAge(feed.timestamp);
   const now = useNow();
@@ -110,6 +113,16 @@ export function DashboardOverview() {
   const [linksPage, setLinksPage] = useState(0);
 
   const LINKS_PAGE_SIZE = 7;
+
+  // Deeper batches for the settlements panel, stepped so each click walks
+  // further back rather than doubling forever.
+  const SETTLEMENT_LIMITS = [6, 30, 100, 250];
+
+  function loadMoreSettlements() {
+    setSettlementLimit(
+      (current) => SETTLEMENT_LIMITS.find((limit) => limit > current) ?? current,
+    );
+  }
 
   const totals = useMemo(() => {
     const collectedUsdCents = links.reduce((sum, link) => sum + link.totalReceivedUsdCents, 0n);
@@ -580,6 +593,16 @@ Recent settlements
                 </li>
               ))}
             </ul>
+          )}
+
+          {hasMore && (
+            <button
+              type="button"
+              onClick={loadMoreSettlements}
+              className="mt-4 inline-flex w-full items-center justify-center border border-line px-4 py-2.5 text-xs font-semibold text-muted hover:border-line-strong hover:text-ink"
+            >
+              Load more settlements
+            </button>
           )}
         </section>
       </div>

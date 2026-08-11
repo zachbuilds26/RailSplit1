@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {TestFtsoV2Interface} from "@flarenetwork/flare-periphery-contracts/coston2/TestFtsoV2Interface.sol";
-import {ContractRegistry} from "@flarenetwork/flare-periphery-contracts/coston2/ContractRegistry.sol";
+/**
+ * Minimal FTSOv2 feed reader. Both the Coston2 test feed and the mainnet
+ * Flare feed expose the same getFeedById(bytes21) surface, so the provider
+ * address is injected at deploy time and this contract carries no network-
+ * specific registry import.
+ */
+interface IFtsoV2 {
+    function getFeedById(bytes21 _feedId)
+        external
+        view
+        returns (uint256 _value, int8 _decimals, uint64 _timestamp);
+}
 
 /**
  * RailSplitPay lets a merchant publish a payment request priced in US dollars
@@ -18,6 +28,16 @@ contract RailSplitPay {
     /// FTSOv2 feed id for FLR/USD. The bytes hold "FLR/USD" behind a 0x01 category byte.
     bytes21 public constant FLR_USD_FEED_ID =
         bytes21(0x01464c522f55534400000000000000000000000000);
+
+    /// The FTSOv2 FLR/USD feed for this network, resolved at deploy time from
+    /// the Flare contract registry. Frozen here so the contract works on any
+    /// Flare network without knowing which one it is deployed to.
+    IFtsoV2 public immutable ftsoV2;
+
+    constructor(IFtsoV2 ftsoV2_) {
+        if (address(ftsoV2_) == address(0)) revert FeedUnavailable();
+        ftsoV2 = ftsoV2_;
+    }
 
     /// A payment is rejected if the feed behind it is older than this.
     uint64 public constant MAX_QUOTE_AGE = 300;
@@ -250,6 +270,8 @@ contract RailSplitPay {
     {
         PaymentLink storage link = links[keccak256(bytes(slug))];
         if (link.merchant == address(0)) revert UnknownLink();
+        if (!link.active) revert LinkInactive();
+        if (link.expiresAt != 0 && block.timestamp > link.expiresAt) revert LinkExpired();
 
         return _requiredWei(link.priceUsdCents);
     }
@@ -382,7 +404,6 @@ contract RailSplitPay {
         view
         returns (uint256 value, int8 decimals, uint64 timestamp)
     {
-        TestFtsoV2Interface ftsoV2 = ContractRegistry.getTestFtsoV2();
         return ftsoV2.getFeedById(FLR_USD_FEED_ID);
     }
 
@@ -407,8 +428,8 @@ contract RailSplitPay {
             uint64 feedTimestamp
         )
     {
-        TestFtsoV2Interface ftsoV2 = ContractRegistry.getTestFtsoV2();
-        (feedValue, feedDecimals, feedTimestamp) = ftsoV2.getFeedById(FLR_USD_FEED_ID);
+        IFtsoV2 ftsoV2Feed = ftsoV2;
+        (feedValue, feedDecimals, feedTimestamp) = ftsoV2Feed.getFeedById(FLR_USD_FEED_ID);
 
         if (feedValue == 0) revert FeedUnavailable();
 
@@ -423,11 +444,17 @@ contract RailSplitPay {
 
         uint256 scaledCents = uint256(priceUsdCents) * 1e16;
 
+        // Ceiling division so a price that does not split evenly into wei is
+        // rounded up, never down. Rounding down would quietly short the
+        // merchant by a fraction of a wei on every payment; rounding up costs
+        // the customer at most one wei, which the surplus refund absorbs.
         if (feedDecimals >= 0) {
-            requiredWei = (scaledCents * (10 ** uint256(uint8(feedDecimals)))) / feedValue;
+            uint256 scale = 10 ** uint256(uint8(feedDecimals));
+            requiredWei = (scaledCents * scale + feedValue - 1) / feedValue;
         } else {
             // A negative decimals value means the feed is scaled up, not down.
-            requiredWei = scaledCents / (feedValue * (10 ** uint256(uint8(-feedDecimals))));
+            uint256 scale = 10 ** uint256(uint8(-feedDecimals));
+            requiredWei = (scaledCents + feedValue * scale - 1) / (feedValue * scale);
         }
     }
 }

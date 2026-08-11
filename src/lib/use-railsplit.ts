@@ -359,13 +359,24 @@ type ContractPayment = {
  * Links can be queried directly by merchant, which keeps the dashboard from
  * pulling the entire chain just to render one wallet's view. Settlement
  * history is walked backward from the newest global payment in bounded pages
- * until the latest five for this merchant are found.
+ * until the latest few for this merchant are found. A larger `collectLimit`
+ * walks further back on demand (the dashboard's "load more"), so a busy
+ * merchant is not permanently capped at the first batch.
  */
-export function useMerchantLedger(merchantAddress?: `0x${string}`) {
+export function useMerchantLedger(
+  merchantAddress?: `0x${string}`,
+  options?: { collectLimit?: number },
+) {
   const client = usePublicClient({ chainId: railsplitChain.id });
+  const collectLimit = options?.collectLimit ?? PAYMENTS_COLLECT_LIMIT;
 
   const query = useQuery({
-    queryKey: ["railsplit-ledger", RAILSPLIT_PAY_ADDRESS, merchantAddress ?? "none"],
+    queryKey: [
+      "railsplit-ledger",
+      RAILSPLIT_PAY_ADDRESS,
+      merchantAddress ?? "none",
+      collectLimit,
+    ],
     enabled: Boolean(client && merchantAddress),
     refetchInterval: 15000,
     queryFn: async () => {
@@ -425,15 +436,16 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
       }));
 
       const linkById = new Map(links.map((link) => [link.linkId, link] as const));
-      const payments = await scanPayments(client, linkById, paymentTotal);
+      const { payments, hasMore } = await scanPayments(client, linkById, paymentTotal, collectLimit);
 
-      return { links, payments };
+      return { links, payments, hasMore };
     },
   });
 
   return {
     links: query.data?.links ?? [],
     payments: query.data?.payments ?? [],
+    hasMore: query.data?.hasMore ?? false,
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
@@ -441,32 +453,30 @@ export function useMerchantLedger(merchantAddress?: `0x${string}`) {
 }
 
 const PAYMENTS_PER_PAGE = 50n;
-const PAYMENTS_COLLECT_LIMIT = 6;
-const MAX_PAGES = 10;
+export const PAYMENTS_COLLECT_LIMIT = 6;
+const MAX_PAGES = 20;
 
 /**
  * Walks the global payments array backward from the newest, collecting up to
- * `PAYMENTS_COLLECT_LIMIT` payments that belong to links in `linkById`. The
- * walk is bounded to `MAX_PAGES` RPC reads so a dashboard refetch cannot fan
- * out into an unbounded number of calls as unrelated payments accumulate.
+ * `collectLimit` payments that belong to links in `linkById`. The walk is
+ * bounded to `MAX_PAGES` RPC reads so a dashboard refetch cannot fan out into
+ * an unbounded number of calls as unrelated payments accumulate.
+ *
+ * `hasMore` reports whether the walk stopped before reaching the start of the
+ * array, so the UI can offer to fetch a deeper batch.
  */
 async function scanPayments(
   client: PublicClient,
   linkById: Map<`0x${string}`, MerchantLink>,
-  paymentTotal?: bigint,
+  paymentTotal: bigint,
+  collectLimit: number,
 ) {
   const payments: SettlementEvent[] = [];
   let offset = 0n;
   let pagesRead = 0;
-  const total =
-    paymentTotal ??
-    ((await client.readContract({
-      address: RAILSPLIT_PAY_ADDRESS,
-      abi: RAILSPLIT_PAY_ABI,
-      functionName: "paymentCount",
-    })) as bigint);
+  const total = paymentTotal;
 
-  while (offset < total && payments.length < PAYMENTS_COLLECT_LIMIT && pagesRead < MAX_PAGES) {
+  while (offset < total && payments.length < collectLimit && pagesRead < MAX_PAGES) {
     pagesRead += 1;
     const pageLimit = total - offset < PAYMENTS_PER_PAGE ? total - offset : PAYMENTS_PER_PAGE;
     const [rawPayments, paymentSlugs] = (await client.readContract({
@@ -478,7 +488,7 @@ async function scanPayments(
 
     if (rawPayments.length === 0) break;
 
-    for (let index = 0; index < rawPayments.length && payments.length < PAYMENTS_COLLECT_LIMIT; index++) {
+    for (let index = 0; index < rawPayments.length && payments.length < collectLimit; index++) {
       const payment = rawPayments[index];
       const link = linkById.get(payment.linkId);
       if (!link) continue;
@@ -500,7 +510,10 @@ async function scanPayments(
     offset += BigInt(rawPayments.length);
   }
 
-  return payments;
+  const stoppedEarly =
+    (payments.length >= collectLimit || pagesRead >= MAX_PAGES) && offset < total;
+
+  return { payments, hasMore: stoppedEarly };
 }
 
 /** Reads the live FLR/USD feed straight from the contract. */

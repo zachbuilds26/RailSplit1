@@ -1,10 +1,11 @@
 // Deploys RailSplitPay and seeds a few payment links so the dashboard has
 // real on-chain data to read. Run with:
 //   npx hardhat run scripts/deploy.js --network coston2
-const { readFileSync, writeFileSync, mkdirSync } = require("node:fs");
+const { existsSync, readFileSync, writeFileSync, mkdirSync } = require("node:fs");
 const { join, dirname } = require("node:path");
 const { JsonRpcProvider, Wallet, ContractFactory, formatEther } = require("ethers");
 const { readEnvValue } = require("./read-env");
+const { resolveFtsoV2Address } = require("./resolve-ftso-v2");
 
 const RPC_URL = "https://coston2-api.flare.network/ext/C/rpc";
 const EXPLORER = "https://coston2-explorer.flare.network";
@@ -58,10 +59,15 @@ async function main() {
   const artifact = JSON.parse(readFileSync(artifactPath, "utf8"));
   const factory = new ContractFactory(artifact.abi, artifact.bytecode, wallet);
 
+  // Resolve the FLR/USD feed for this network from the Flare contract
+  // registry, then pass it in so the contract has no network-specific import.
+  const ftsoV2Address = await resolveFtsoV2Address(provider);
+
   console.log("");
   console.log("Deploying RailSplitPay...");
+  console.log("FTSOv2 feed:  " + ftsoV2Address);
 
-  const contract = await factory.deploy();
+  const contract = await factory.deploy(ftsoV2Address);
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();

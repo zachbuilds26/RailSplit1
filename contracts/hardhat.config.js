@@ -17,6 +17,10 @@ module.exports = {
     // Tests read the live FTSOv2 feed, so they run against a Coston2 fork.
     hardhat: {
       forking: { url: "https://coston2-api.flare.network/ext/C/rpc" },
+      // EDR needs an explicit hardfork to simulate calls at the fork block;
+      // without it the first eth_call on the fork fails with a hardfork
+      // activation error for chain 114.
+      hardfork: "cancun",
     },
     coston2: {
       url: "https://coston2-api.flare.network/ext/C/rpc",

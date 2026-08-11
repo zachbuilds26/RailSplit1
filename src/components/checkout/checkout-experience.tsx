@@ -22,6 +22,11 @@ import {
   type OnchainLink,
 } from "@/lib/use-railsplit";
 
+// Matches MAX_QUOTE_AGE in RailSplitPay.sol. The contract refuses to settle
+// on a feed older than this, so the checkout stops a payment before it is
+// attempted rather than letting it fail onchain.
+const MAX_FEED_AGE_SECONDS = 300;
+
 export function CheckoutExperience({ slug }: { slug: string }) {
   const { link, isLoading, error, notFound, refetch } = usePaymentLink(slug);
   const now = useNow();
@@ -121,6 +126,7 @@ function CheckoutCard({
 
   const required = quote.requiredWei;
   const bufferedRequired = required === undefined ? undefined : withQuoteBuffer(required);
+  const feedStale = feedAge !== undefined && feedAge > MAX_FEED_AGE_SECONDS;
   const balanceReady = Boolean(balance) && !balanceLoading && !balanceError;
   const insufficient =
     bufferedRequired !== undefined && balanceReady && balance!.value < bufferedRequired;
@@ -129,11 +135,12 @@ function CheckoutCard({
     bufferedRequired !== undefined &&
     balanceReady &&
     !insufficient &&
+    !feedStale &&
     !quote.error &&
     !quote.isFetching;
 
   async function handlePay() {
-    if (required === undefined || quote.error || quote.isFetching) return;
+    if (required === undefined || quote.error || quote.isFetching || feedStale) return;
 
     setFailure(undefined);
 
@@ -218,7 +225,7 @@ function CheckoutCard({
           </div>
         </div>
 
-        {onCorrectChain && quote.flrUsdPrice !== undefined && !quote.error && (
+        {onCorrectChain && quote.flrUsdPrice !== undefined && !quote.error && !feedStale && (
           <div className="mt-5 border border-line bg-background-deep px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
@@ -237,7 +244,16 @@ function CheckoutCard({
           </div>
         )}
 
-        {onCorrectChain && quote.error && (
+        {onCorrectChain && feedStale && (
+          <ReadFailure
+            className="mt-5"
+            title="The current rate is too old to use."
+            copy="Flare's price feed has not updated recently, so RailSplit cannot settle a payment on it. Check back in a moment."
+            onRetry={() => quote.refetch()}
+          />
+        )}
+
+        {onCorrectChain && quote.error && !feedStale && (
           <ReadFailure
             className="mt-5"
             title="The current rate is unavailable right now."

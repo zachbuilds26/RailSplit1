@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import Image from "next/image";
 import { useConnect, useConnection, useConnectors, useReconnect } from "wagmi";
 import { Icon } from "@/components/ui/icon";
 import { getRail, type RailKey } from "@/lib/chain";
@@ -207,7 +208,14 @@ export function WalletControllerProvider({ children }: { children: ReactNode }) 
                 >
                   <span className="inline-flex items-center gap-3">
                     {connector.icon ? (
-                      <img src={connector.icon} alt="" className="size-4" />
+                      <Image
+                        src={connector.icon}
+                        alt=""
+                        width={16}
+                        height={16}
+                        unoptimized
+                        className="size-4"
+                      />
                     ) : (
                       <Icon name="wallet" className="size-4 text-accent" />
                     )}
