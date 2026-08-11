@@ -82,6 +82,10 @@ export function PaymentLinkForm() {
   };
 
   if (receipt.isSuccess && hash) {
+    const liveSlug = submittedLink?.slug ?? slug;
+    const liveTitle = submittedLink?.title ?? preview.title;
+    const liveCents = submittedLink?.cents ?? preview.cents;
+
     return (
       <div className="mx-auto max-w-2xl px-5 py-16 text-center sm:px-8">
         <span className="mx-auto grid size-12 place-items-center bg-success text-background">
@@ -89,8 +93,8 @@ export function PaymentLinkForm() {
         </span>
         <h1 className="font-display mt-6 text-3xl tracking-[-0.045em]">Your payment link is live.</h1>
         <p className="mt-3 text-sm text-muted">
-          {(submittedLink?.title ?? preview.title) + " at "}
-          <span className="price-figure">{formatUsdCents(submittedLink?.cents ?? preview.cents)}</span>
+          {liveTitle + " at "}
+          <span className="price-figure">{formatUsdCents(liveCents)}</span>
         </p>
         <a
           href={explorerTx(hash)}
@@ -103,7 +107,7 @@ export function PaymentLinkForm() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             type="button"
-            onClick={() => router.push(buildCheckoutPath(submittedLink?.slug ?? slug))}
+            onClick={() => router.push(buildCheckoutPath(liveSlug))}
             className="bg-accent px-5 py-3 text-sm font-semibold text-accent-ink hover:bg-white"
           >
             View checkout

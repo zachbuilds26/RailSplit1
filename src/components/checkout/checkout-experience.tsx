@@ -8,6 +8,7 @@ import { RailsplitLogo } from "@/components/ui/railsplit-logo";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { explorerTx, railsplitChain } from "@/lib/chain";
 import { formatReadError, withQuoteBuffer } from "@/lib/railsplit-errors";
+import { saveStoredReceipt } from "@/lib/receipt-history";
 import {
   formatCoin,
   formatFeedPrice,
@@ -29,7 +30,7 @@ export function CheckoutExperience({ slug }: { slug: string }) {
   if (paidHash && link) {
     return (
       <CheckoutShell>
-        <PaidReceipt link={link} hash={paidHash} />
+        <PaidReceipt link={link} slug={slug} hash={paidHash} />
       </CheckoutShell>
     );
   }
@@ -103,12 +104,19 @@ function CheckoutCard({
 
   useEffect(() => {
     if (payment.isConfirmed && payment.hash) {
+      saveStoredReceipt({
+        slug,
+        title: link.title,
+        hash: payment.hash,
+        priceUsdCents: link.priceUsdCents.toString(),
+        paidAt: Math.floor(Date.now() / 1000),
+      });
       onPaid(payment.hash);
     }
-  }, [payment.isConfirmed, payment.hash, onPaid]);
+  }, [payment.isConfirmed, payment.hash, onPaid, slug, link.title, link.priceUsdCents]);
 
   if (payment.isConfirmed && payment.hash) {
-    return <PaidReceipt link={link} hash={payment.hash} />;
+    return <PaidReceipt link={link} slug={slug} hash={payment.hash} />;
   }
 
   const required = quote.requiredWei;
@@ -303,7 +311,9 @@ function CheckoutCard({
   );
 }
 
-function PaidReceipt({ link, hash }: { link: OnchainLink; hash: `0x${string}` }) {
+function PaidReceipt({ link, slug, hash }: { link: OnchainLink; slug: string; hash: `0x${string}` }) {
+  const receiptHref = `/pay/${slug}/receipt?tx=${hash}`;
+
   return (
     <section className="border border-line bg-surface p-5 text-center sm:p-7">
         <span className="mx-auto grid size-12 place-items-center bg-success text-background">
@@ -335,12 +345,21 @@ function PaidReceipt({ link, hash }: { link: OnchainLink; hash: `0x${string}` })
           </div>
         </div>
 
-        <Link
-          href="/dashboard"
-          className="mt-7 inline-flex w-full items-center justify-center border border-line py-3 text-sm font-semibold hover:border-line-strong hover:bg-surface-raised"
-        >
-          Back to dashboard
-        </Link>
+        <div className="mt-7 flex flex-col gap-3">
+          <Link
+            href={receiptHref}
+            className="inline-flex w-full items-center justify-center bg-accent py-3 text-sm font-semibold text-accent-ink hover:bg-white"
+          >
+            View receipt
+            <Icon name="arrow-up-right" className="ml-2 size-4" />
+          </Link>
+          <Link
+            href="/dashboard"
+            className="inline-flex w-full items-center justify-center border border-line py-3 text-sm font-semibold hover:border-line-strong hover:bg-surface-raised"
+          >
+            Back to dashboard
+          </Link>
+        </div>
       </section>
   );
 }

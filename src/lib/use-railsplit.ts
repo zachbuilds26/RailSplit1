@@ -194,6 +194,117 @@ export function usePayLink(slug: string) {
   };
 }
 
+export type PaymentReceipt = {
+  linkId: `0x${string}`;
+  merchant: `0x${string}`;
+  payer: `0x${string}`;
+  amountWei: bigint;
+  priceUsdCents: bigint;
+  flrUsdPrice: bigint;
+  flrUsdDecimals: number;
+  feedTimestamp: bigint;
+  paidAt: bigint;
+  hash: `0x${string}`;
+  blockNumber: bigint;
+};
+
+/**
+ * Rebuilds a settled payment from on-chain data alone, keyed by the
+ * transaction hash that paid `slug`'s link.
+ *
+ * The receipt page is URL-addressable, so it has no indexer or local storage
+ * to lean on: the tx receipt carries the PaymentReceived event (amount, rate,
+ * merchant, payer) and the block carries the settlement timestamp.
+ */
+export function usePaymentReceipt(slug: string, txHash: `0x${string}` | undefined) {
+  const client = usePublicClient({ chainId: railsplitChain.id });
+
+  const receipt = useWaitForTransactionReceipt({
+    hash: txHash,
+    chainId: railsplitChain.id,
+  });
+
+  const block = useQuery({
+    queryKey: ["railsplit-receipt-block", txHash, String(receipt.data?.blockNumber ?? 0n)],
+    enabled: Boolean(txHash && receipt.data?.blockNumber && client),
+    queryFn: async () => {
+      if (!client || !receipt.data?.blockNumber) {
+        throw new Error("No transaction block available.");
+      }
+      return client.getBlock({ blockNumber: receipt.data.blockNumber });
+    },
+  });
+
+  const validation = useMemo(() => {
+    if (!txHash) return { status: "idle" as const };
+
+    if (receipt.isError || !receipt.data) {
+      return {
+        status: "invalid" as const,
+        message: "This transaction could not be confirmed.",
+      };
+    }
+
+    if (receipt.isLoading) {
+      return { status: "checking" as const };
+    }
+
+    try {
+      const expectedLinkId = keccak256(stringToHex(slug));
+      const paymentEvents = parseEventLogs({
+        abi: RAILSPLIT_PAY_ABI,
+        eventName: "PaymentReceived",
+        logs: receipt.data.logs,
+      });
+      const paymentEvent = paymentEvents.find(
+        (event) =>
+          event.address.toLowerCase() === contract.address.toLowerCase() &&
+          event.args.linkId === expectedLinkId,
+      );
+
+      if (!paymentEvent) {
+        return {
+          status: "invalid" as const,
+          message: "This transaction did not pay this link.",
+        };
+      }
+
+      return { status: "valid" as const, event: paymentEvent };
+    } catch {
+      return {
+        status: "invalid" as const,
+        message: "This transaction did not pay this link.",
+      };
+    }
+  }, [txHash, slug, receipt.isError, receipt.isLoading, receipt.data]);
+
+  const payment =
+    validation.status === "valid"
+      ? ({
+          linkId: validation.event.args.linkId,
+          merchant: validation.event.args.merchant,
+          payer: validation.event.args.payer,
+          amountWei: validation.event.args.amountWei,
+          priceUsdCents: validation.event.args.priceUsdCents,
+          flrUsdPrice: validation.event.args.flrUsdPrice,
+          flrUsdDecimals: Number(validation.event.args.flrUsdDecimals),
+          feedTimestamp: validation.event.args.feedTimestamp,
+          paidAt: block.data?.timestamp ?? 0n,
+          hash: txHash as `0x${string}`,
+          blockNumber: receipt.data?.blockNumber ?? 0n,
+        } satisfies PaymentReceipt)
+      : undefined;
+
+  return {
+    payment,
+    isLoading:
+      Boolean(txHash) &&
+      (receipt.isLoading || validation.status === "checking" || block.isLoading),
+    isConfirmed: receipt.isSuccess && validation.status === "valid",
+    error: receipt.error ?? block.error ?? (validation.status === "invalid" ? new Error(validation.message) : undefined),
+  };
+}
+
 export type MerchantLink = {
   linkId: `0x${string}`;
   slug: string;
