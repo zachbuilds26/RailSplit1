@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAccount, useBalance } from "wagmi";
 import { Icon } from "@/components/ui/icon";
 import { RailsplitLogo } from "@/components/ui/railsplit-logo";
@@ -24,6 +24,15 @@ import {
 export function CheckoutExperience({ slug }: { slug: string }) {
   const { link, isLoading, error, notFound, refetch } = usePaymentLink(slug);
   const now = useNow();
+  const [paidHash, setPaidHash] = useState<`0x${string}` | undefined>();
+
+  if (paidHash && link) {
+    return (
+      <CheckoutShell>
+        <PaidReceipt link={link} hash={paidHash} />
+      </CheckoutShell>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -57,12 +66,20 @@ export function CheckoutExperience({ slug }: { slug: string }) {
 
   return (
     <CheckoutShell>
-      <CheckoutCard slug={slug} link={link} />
+      <CheckoutCard slug={slug} link={link} onPaid={setPaidHash} />
     </CheckoutShell>
   );
 }
 
-function CheckoutCard({ slug, link }: { slug: string; link: OnchainLink }) {
+function CheckoutCard({
+  slug,
+  link,
+  onPaid,
+}: {
+  slug: string;
+  link: OnchainLink;
+  onPaid: (hash: `0x${string}`) => void;
+}) {
   const { isConnected, chainId, address } = useAccount();
   const onCorrectChain = isConnected && chainId === railsplitChain.id;
 
@@ -83,6 +100,12 @@ function CheckoutCard({ slug, link }: { slug: string; link: OnchainLink }) {
   });
 
   const [failure, setFailure] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (payment.isConfirmed && payment.hash) {
+      onPaid(payment.hash);
+    }
+  }, [payment.isConfirmed, payment.hash, onPaid]);
 
   if (payment.isConfirmed && payment.hash) {
     return <PaidReceipt link={link} hash={payment.hash} />;
@@ -354,7 +377,7 @@ function Unavailable({ reason }: { reason: "missing" | "expired" | "closed" | "p
         <h1 className="font-display mt-3 text-3xl tracking-[-0.045em]">{copy.heading}</h1>
         <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-muted">{copy.body}</p>
         <Link
-          href="/"
+          href="/dashboard"
           className="mt-7 inline-flex border border-line px-4 py-2.5 text-sm font-semibold hover:border-line-strong hover:bg-surface-raised"
         >
           Return home
