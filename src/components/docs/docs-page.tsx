@@ -19,27 +19,27 @@ const faqItems = [
   {
     question: "What does RailSplit do?",
     answer:
-      "RailSplit turns a merchant's price into a payment link. The customer pays the amount shown, and the funds move to the merchant's wallet without an intermediary.",
+      "RailSplit turns a merchant's dollar price into an onchain payment link. The customer pays in the network's native coin at the live FTSOv2 FLR/USD rate, and the funds move to the merchant's wallet without an intermediary.",
   },
   {
-    question: "How does the price stay current?",
+    question: "Who sets the coin amount?",
     answer:
-      "RailSplit prices each payment with the live onchain rate at confirmation, so the amount charged matches the market when the transaction lands.",
+      "No one in the browser. The conversion happens inside the contract against the live feed at the moment of payment, so no one can pay at a stale or self-chosen rate.",
   },
   {
     question: "Why does the checkout ask for slightly more than the price?",
     answer:
-      "The dollar price is fixed, but the coin amount moves with the live rate. The contract takes a small buffer at payment time and automatically refunds whatever is left over.",
+      "The dollar price is fixed, but the coin amount moves with the live rate. Customers send a small buffer to absorb rate movement, and the contract refunds whatever is left over in the same transaction.",
   },
   {
-    question: "When does a link stop taking payments?",
+    question: "What happens if the feed is old?",
     answer:
-      "A link closes permanently once a payment confirms, or when its expiry time passes. After that the checkout shows a completed or expired state.",
+      "A payment is rejected if the feed timestamp is more than 300 seconds behind the block. RailSplit refuses to settle at an old rate.",
   },
   {
     question: "Can a link be paid twice?",
     answer:
-      "No. The first successful payment closes the link, so no one can pay the same checkout twice.",
+      "No. Each link is single use. It is deactivated in the same transaction that settles it, before any value moves.",
   },
   {
     question: "Is this live on mainnet?",
@@ -121,7 +121,7 @@ export function DocsPage() {
             <h1 className="font-display railsplit-docs__title">Clear payment links on Flare.</h1>
             <p className="railsplit-docs__lead">
               With RailSplit, a merchant publishes one payment link, names the dollar price, and
-              the payment confirms onchain and lands in their wallet.
+              the payment confirms onchain at the live FTSOv2 rate and lands in their wallet.
             </p>
             <div className="railsplit-docs__callout">
               <p>
@@ -134,8 +134,9 @@ export function DocsPage() {
           <section className="railsplit-docs__section" id="overview">
             <h2 className="railsplit-docs__section-title">Overview</h2>
             <p>
-              The flow is simple: publish a link, share it, and the payment moves onchain to the
-              merchant wallet.
+              The flow is simple: publish a dollar-priced link, share it, and the payment moves
+              onchain to the merchant wallet. The merchant receives the dollar value they asked
+              for, and the customer gets anything sent over refunded.
             </p>
             <p>
               The landing page introduces the product, the checkout confirms the amount, the
@@ -147,14 +148,18 @@ export function DocsPage() {
             <h2 className="railsplit-docs__section-title">Flow</h2>
             <ol className="railsplit-docs__steps">
               <li>
-                <strong>Set a dollar price.</strong> The merchant publishes a payment link with the exact amount.
+                <strong>Set a dollar price.</strong> The merchant connects a wallet and publishes a
+                payment link with a title and the exact amount, stored onchain by its public slug.
               </li>
               <li>
-                <strong>Share one payment link.</strong> Customers open it, connect a wallet,
-                and review the live payment amount.
+                <strong>Share one payment link.</strong> Customers open it, connect a wallet, and
+                see the dollar price with the coin amount due right now, read from the live FTSOv2
+                FLR/USD feed.
               </li>
               <li>
-                <strong>Settle onchain.</strong> The payment confirms and moves directly to the merchant wallet.
+                <strong>Settle onchain.</strong> The contract reads the feed again at payment time,
+                converts the price, forwards the coin to the merchant, and returns the surplus to
+                the customer. The link closes itself.
               </li>
             </ol>
             <div className="mt-6 overflow-hidden border border-line bg-background-deep p-2">
@@ -170,12 +175,15 @@ export function DocsPage() {
           <section className="railsplit-docs__section" id="settlement">
             <h2 className="railsplit-docs__section-title">Settlement</h2>
             <p>
-              RailSplit uses the live onchain rate when payment is confirmed. That keeps the final
-              amount aligned with the transaction instead of the screen.
+              The conversion happens inside the contract, not in the browser. The caller cannot
+              pass in a rate, so the amount charged is whatever the live feed reports at the
+              moment of payment.
             </p>
             <ul className="railsplit-docs__list">
-              <li>The checkout always reflects the current rate at confirmation.</li>
-              <li>The merchant receives the settlement directly in the connected wallet.</li>
+              <li>The merchant receives exactly the converted amount; the surplus is refunded to the payer in the same transaction.</li>
+              <li>A payment is rejected if the feed is more than 300 seconds old, so nothing settles at a stale rate.</li>
+              <li>Each link is single use and closes itself once a payment settles.</li>
+              <li>Settlement history is stored onchain and read back in pages, newest first, so the dashboard loads from a plain call.</li>
               <li>If the network cannot read the rate, the app shows a clear retry state.</li>
             </ul>
           </section>
@@ -194,12 +202,14 @@ export function DocsPage() {
           <section className="railsplit-docs__section" id="dashboard">
             <h2 className="railsplit-docs__section-title">Dashboard</h2>
             <p>
-              The merchant dashboard shows active links, total settlement value, and recent activity
-              once a wallet is connected.
+              The merchant dashboard shows settlement metrics, payment links, and a live onchain
+              ledger once a wallet is connected.
             </p>
             <ul className="railsplit-docs__list">
-              <li>Links appear as onchain records.</li>
-              <li>Payments appear in a recent activity feed.</li>
+              <li>Links appear as onchain records with their dollar price and status.</li>
+              <li>Recent settlements appear in a ledger with the dollar price and coin amount received.</li>
+              <li>Every link can be shared as a QR code or copied checkout URL.</li>
+              <li>Paid links offer a receipt, downloadable as a JPEG, that links to the explorer.</li>
               <li>The view stays scoped to the connected merchant.</li>
             </ul>
           </section>

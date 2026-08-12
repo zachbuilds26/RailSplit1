@@ -10,21 +10,22 @@ const faqItems = [
   {
     question: "What is RailSplit?",
     answer:
-      "RailSplit gives a merchant one link per payment. Customers see the exact dollar price, and the settlement arrives directly in the merchant wallet.",
+      "RailSplit gives a merchant one link per payment priced in US dollars. Customers pay in the network's native coin at the live rate, and the settlement arrives directly in the merchant wallet.",
   },
   {
     question: "Where does the amount come from?",
     answer:
-      "RailSplit uses the live onchain rate at confirmation, so the amount stays current when the payment lands.",
+      "The contract reads the live FTSOv2 FLR/USD feed at payment time and does the conversion itself. No one can pass in a rate, so the amount stays current when the payment lands.",
   },
   {
     question: "Do you hold funds?",
-    answer: "No. Payment goes directly to the merchant wallet in the same flow.",
+    answer:
+      "No. The merchant receives exactly the converted amount, and the customer gets anything sent over refunded in the same transaction.",
   },
   {
     question: "Can a link be paid twice?",
     answer:
-      "No. Each link closes after a successful payment, so the checkout moves to a completed state.",
+      "No. Each link is single use and closes after a successful payment, so the checkout moves to a completed state.",
   },
   {
     question: "Is this ready for mainnet?",
@@ -42,7 +43,7 @@ const whyFlare = [
     number: "01",
     title: "Priced by Flare's FTSO feeds",
     copy:
-      "RailSplit reads the rate from Flare's onchain price feeds at the moment of confirmation, so the amount charged matches the live market — not a stale screen value.",
+      "The contract reads the rate from Flare's onchain price feeds at the moment of payment and does the arithmetic itself. A stale feed is rejected, so nothing settles at an old rate.",
   },
   {
     number: "02",
@@ -53,7 +54,7 @@ const whyFlare = [
     number: "03",
     title: "Direct to the merchant",
     copy:
-      "The payment moves straight to the merchant wallet without a custody step in between.",
+      "The payment moves straight to the merchant wallet without a custody step in between. Each link is single use and closes itself once it settles.",
   },
 ];
 
