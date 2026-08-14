@@ -45,6 +45,12 @@ async function deploy() {
   await ethers.provider.send("hardhat_setBalance", [await customer.getAddress(), budget]);
 
   // Fund the customer with FXRP so the ERC-20 rail can be exercised.
+  //
+  // The impersonated asset manager sends the mint tx, so it needs gas too:
+  // the fork mirrors its on-chain balance, which is near zero (it is a
+  // contract), and a mint sent without gas reverts with "Sender doesn't have
+  // enough funds" rather than reaching the token's mint logic.
+  await ethers.provider.send("hardhat_setBalance", [ASSET_MANAGER_FXRP, budget]);
   await ethers.provider.send("hardhat_impersonateAccount", [ASSET_MANAGER_FXRP]);
   const assetManager = await ethers.getSigner(ASSET_MANAGER_FXRP);
   const fxrp = await ethers.getContractAt(FXRP_ABI, fxrpAddress, assetManager);

@@ -275,7 +275,10 @@ export function usePayLinkFxrp(slug: string) {
   });
 
   // How much FXRP the contract is allowed to pull for this payer.
-  const allowance = useReadContract({
+  const {
+    data: allowanceData,
+    refetch: refetchAllowance,
+  } = useReadContract({
     abi: [
       {
         type: "function",
@@ -306,7 +309,7 @@ export function usePayLinkFxrp(slug: string) {
       setHash(undefined);
 
       // Approve only if the existing allowance cannot cover the amount.
-      const existingAllowance = allowance.data as bigint | undefined;
+      const existingAllowance = allowanceData as bigint | undefined;
       if (existingAllowance === undefined || existingAllowance < value) {
         const approveTx = await writeApprove({
           address: FXRP.address,
@@ -331,6 +334,13 @@ export function usePayLinkFxrp(slug: string) {
           confirmations: 1,
           timeout: 60_000,
         });
+
+        // The allowance query only refreshes on a 12s timer, so its cached
+        // value is stale right after the approve lands. Pull the fresh value
+        // now, otherwise a retry in this session re-approves against the old
+        // (too small) allowance or skips the check against the old (too big)
+        // one.
+        await refetchAllowance();
       }
 
       const txHash = await writePay({
@@ -342,8 +352,16 @@ export function usePayLinkFxrp(slug: string) {
       setHash(txHash);
       return txHash;
     },
-    [allowance.data, resetApprove, resetPay, slug, writeApprove, writePay],
+    [allowanceData, refetchAllowance, resetApprove, resetPay, slug, writeApprove, writePay],
   );
+
+  // The pay consumes the allowance; refresh it once the payment mines so a
+  // later payment in this session starts from the true remaining balance.
+  useEffect(() => {
+    if (receipt.isSuccess) {
+      void refetchAllowance();
+    }
+  }, [receipt.isSuccess, refetchAllowance]);
 
   const clear = useCallback(() => {
     setHash(undefined);
@@ -351,15 +369,62 @@ export function usePayLinkFxrp(slug: string) {
     resetApprove();
   }, [resetPay, resetApprove]);
 
+  const validation = useMemo(() => {
+    if (!hash) return { status: "idle" as const };
+
+    if (receipt.isError) {
+      return {
+        status: "invalid" as const,
+        message: receipt.error?.message ?? "The transaction could not be confirmed.",
+      };
+    }
+
+    if (receipt.isLoading || !receipt.data) {
+      return { status: "checking" as const };
+    }
+
+    try {
+      const expectedLinkId = keccak256(stringToHex(slug));
+      const paymentEvents = parseEventLogs({
+        abi: RAILSPLIT_PAY_ABI,
+        eventName: "PaymentReceived",
+        logs: receipt.data.logs,
+      });
+      const paymentEvent = paymentEvents.find(
+        (event) =>
+          event.address.toLowerCase() === contract.address.toLowerCase() &&
+          event.args.linkId === expectedLinkId,
+      );
+
+      if (!paymentEvent) {
+        return {
+          status: "invalid" as const,
+          message: "The mined transaction did not pay this link.",
+        };
+      }
+
+      return { status: "valid" as const };
+    } catch {
+      return {
+        status: "invalid" as const,
+        message: "The mined transaction did not pay this link.",
+      };
+    }
+  }, [hash, receipt.data, receipt.error, receipt.isError, receipt.isLoading, slug]);
+
+  const isConfirmed = receipt.isSuccess && validation.status === "valid";
+  const isConfirming = Boolean(hash) && (receipt.isLoading || validation.status === "checking");
+  const validationError = validation.status === "invalid" ? new Error(validation.message) : undefined;
+
   return {
     pay,
     clear,
     hash,
     address,
     isSubmitting: approvePending || payPending,
-    isConfirming: receipt.isLoading,
-    isConfirmed: receipt.isSuccess,
-    error: approveError ?? payError ?? receipt.error,
+    isConfirming,
+    isConfirmed,
+    error: approveError ?? payError ?? receipt.error ?? validationError,
   };
 }
 
@@ -630,10 +695,30 @@ export const PAYMENTS_COLLECT_LIMIT = 6;
 const MAX_PAGES = 20;
 
 /**
+ * Page budget for a single settlement scan.
+ *
+ * The budget must scale with `collectLimit`, or the dashboard's "load more"
+ * dead-ends: it raises the requested depth, but a fixed cap re-scans the same
+ * shallow window when this merchant's payments sit far back among unrelated
+ * ones, so the walk never finds anything new. Growth is bounded to keep a
+ * periodic refetch from fanning out into an unbounded number of RPC reads.
+ */
+function pageBudget(collectLimit: number) {
+  return Math.max(
+    MAX_PAGES,
+    Math.min(
+      Math.ceil((collectLimit * 4) / Number(PAYMENTS_PER_PAGE)) + MAX_PAGES,
+      MAX_PAGES * 2,
+    ),
+  );
+}
+
+/**
  * Walks the global payments array backward from the newest, collecting up to
  * `collectLimit` payments that belong to links in `linkById`. The walk is
- * bounded to `MAX_PAGES` RPC reads so a dashboard refetch cannot fan out into
- * an unbounded number of calls as unrelated payments accumulate.
+ * bounded to `pageBudget(collectLimit)` RPC reads so a dashboard refetch
+ * cannot fan out into an unbounded number of calls as unrelated payments
+ * accumulate, while still going deeper when a larger batch is requested.
  *
  * `hasMore` reports whether the walk stopped before reaching the start of the
  * array, so the UI can offer to fetch a deeper batch.
@@ -648,8 +733,9 @@ async function scanPayments(
   let offset = 0n;
   let pagesRead = 0;
   const total = paymentTotal;
+  const maxPages = pageBudget(collectLimit);
 
-  while (offset < total && payments.length < collectLimit && pagesRead < MAX_PAGES) {
+  while (offset < total && payments.length < collectLimit && pagesRead < maxPages) {
     pagesRead += 1;
     const pageLimit = total - offset < PAYMENTS_PER_PAGE ? total - offset : PAYMENTS_PER_PAGE;
     const [rawPayments, paymentSlugs] = (await client.readContract({
@@ -685,7 +771,7 @@ async function scanPayments(
   }
 
   const stoppedEarly =
-    (payments.length >= collectLimit || pagesRead >= MAX_PAGES) && offset < total;
+    (payments.length >= collectLimit || pagesRead >= maxPages) && offset < total;
 
   return { payments, hasMore: stoppedEarly };
 }

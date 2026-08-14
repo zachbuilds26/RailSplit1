@@ -33,4 +33,8 @@ module.exports = {
       accounts: coston2Accounts,
     },
   },
+  // The fork answers the live FTSO feeds over the public Coston2 RPC, which
+  // is slow enough to blow past mocha's 40s default for the network-heavy
+  // tests. Give the whole suite a generous ceiling.
+  mocha: { timeout: 180000 },
 };

@@ -140,11 +140,14 @@ export function DashboardOverview() {
   }
 
   const totals = useMemo(() => {
-    const collectedUsdCents = links.reduce((sum, link) => sum + link.totalReceivedUsdCents, 0n);
-
+    // Sum the same settled window the coin breakdown below uses. The USD
+    // total and the per-asset amounts must agree, or the headline number and
+    // its caption disagree once the ledger outgrows one page.
+    let collectedUsdCents = 0n;
     let collectedNative = 0n;
     let collectedFxrp = 0n;
     for (const payment of payments) {
+      collectedUsdCents += payment.priceUsdCents;
       if (payment.asset === 1) collectedFxrp += payment.amountWei;
       else collectedNative += payment.amountWei;
     }
