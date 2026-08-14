@@ -9,11 +9,13 @@ import { RailsplitLogo } from "@/components/ui/railsplit-logo";
 import { explorerTx, railsplitChain, shortenAddress } from "@/lib/chain";
 import { formatReadError } from "@/lib/railsplit-errors";
 import {
-  formatCoin,
+  assetSymbol,
+  formatAssetAmount,
   formatFeedPrice,
   formatUsdCents,
   usePaymentLink,
   usePaymentReceipt,
+  type SettlementAsset,
 } from "@/lib/use-railsplit";
 
 export function ReceiptExperience({
@@ -46,6 +48,7 @@ export function ReceiptExperience({
           amountWei={receipt.payment.amountWei}
           flrUsdPrice={receipt.payment.flrUsdPrice}
           flrUsdDecimals={receipt.payment.flrUsdDecimals}
+          asset={receipt.payment.asset}
           paidAt={receipt.payment.paidAt}
           merchant={receipt.payment.merchant}
           payer={receipt.payment.payer}
@@ -106,6 +109,7 @@ function ReceiptCard({
   amountWei,
   flrUsdPrice,
   flrUsdDecimals,
+  asset,
   paidAt,
   merchant,
   payer,
@@ -116,6 +120,7 @@ function ReceiptCard({
   amountWei: bigint;
   flrUsdPrice: bigint;
   flrUsdDecimals: number;
+  asset: SettlementAsset;
   paidAt: bigint;
   merchant: `0x${string}`;
   payer: `0x${string}`;
@@ -127,6 +132,8 @@ function ReceiptCard({
 
   const paidAtLabel = paidAt > 0n ? new Date(Number(paidAt) * 1000).toLocaleString() : undefined;
   const rateLabel = `${formatFeedPrice(flrUsdPrice, flrUsdDecimals)} USD`;
+  const symbol = assetSymbol(asset);
+  const amountLabel = formatAssetAmount(amountWei, asset);
 
   async function downloadJpeg() {
     const node = printRef.current;
@@ -183,7 +190,7 @@ function ReceiptCard({
             {formatUsdCents(priceUsdCents)}
           </p>
           <p className="mt-2 text-sm text-muted">
-            settled in {railsplitChain.nativeCurrency.symbol}
+            settled in {symbol}
           </p>
         </div>
 
@@ -191,13 +198,13 @@ function ReceiptCard({
           <div className="flex items-center justify-between gap-4 py-4">
             <dt className="text-muted">Amount paid</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCoin(amountWei)} {railsplitChain.nativeCurrency.symbol}
+              {amountLabel} {symbol}
             </dd>
           </div>
           <div className="flex items-center justify-between gap-4 py-4">
             <dt className="text-muted">Settlement rate</dt>
             <dd className="font-semibold tabular-nums">
-              1 {railsplitChain.nativeCurrency.symbol} = {rateLabel}
+              1 {symbol} = {rateLabel}
             </dd>
           </div>
           {paidAtLabel && (
@@ -273,7 +280,7 @@ function ReceiptCard({
         </div>
       </section>
 
-      <ReceiptPrintLayout printRef={printRef} title={title} priceUsdCents={priceUsdCents} amountWei={amountWei} rateLabel={rateLabel} paidAtLabel={paidAtLabel} merchant={merchant} payer={payer} hash={hash} />
+      <ReceiptPrintLayout printRef={printRef} title={title} priceUsdCents={priceUsdCents} symbol={symbol} amountLabel={amountLabel} rateLabel={rateLabel} paidAtLabel={paidAtLabel} merchant={merchant} payer={payer} hash={hash} />
     </>
   );
 }
@@ -282,7 +289,8 @@ const ReceiptPrintLayout = ({
   printRef,
   title,
   priceUsdCents,
-  amountWei,
+  symbol,
+  amountLabel,
   rateLabel,
   paidAtLabel,
   merchant,
@@ -292,7 +300,8 @@ const ReceiptPrintLayout = ({
   printRef: React.Ref<HTMLDivElement>;
   title: string;
   priceUsdCents: bigint;
-  amountWei: bigint;
+  symbol: string;
+  amountLabel: string;
   rateLabel: string;
   paidAtLabel?: string;
   merchant: `0x${string}`;
@@ -344,13 +353,13 @@ const ReceiptPrintLayout = ({
             {formatUsdCents(priceUsdCents)}
           </p>
           <p className="mt-2 text-sm text-muted">
-            settled in {railsplitChain.nativeCurrency.symbol}
+            settled in {symbol}
           </p>
         </div>
 
         <dl className="divide-y divide-line px-5 text-sm sm:px-7">
-          {row("Amount paid", `${formatCoin(amountWei)} ${railsplitChain.nativeCurrency.symbol}`)}
-          {row("Settlement rate", `1 ${railsplitChain.nativeCurrency.symbol} = ${rateLabel}`)}
+          {row("Amount paid", `${amountLabel} ${symbol}`)}
+          {row("Settlement rate", `1 ${symbol} = ${rateLabel}`)}
           {paidAtLabel && row("Paid at", paidAtLabel)}
           {row("Merchant", <span className="font-mono text-xs">{shortenAddress(merchant)}</span>)}
           {row("Payer", <span className="font-mono text-xs">{shortenAddress(payer)}</span>)}

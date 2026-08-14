@@ -3,9 +3,10 @@
 //   npx hardhat run scripts/deploy.js --network coston2
 const { existsSync, readFileSync, writeFileSync, mkdirSync } = require("node:fs");
 const { join, dirname } = require("node:path");
-const { JsonRpcProvider, Wallet, ContractFactory, formatEther } = require("ethers");
+const { JsonRpcProvider, Wallet, ContractFactory, formatEther, formatUnits } = require("ethers");
 const { readEnvValue } = require("./read-env");
 const { resolveFtsoV2Address } = require("./resolve-ftso-v2");
+const { resolveFxrpAddress } = require("./resolve-fxrp");
 
 const RPC_URL = "https://coston2-api.flare.network/ext/C/rpc";
 const EXPLORER = "https://coston2-explorer.flare.network";
@@ -22,8 +23,10 @@ const artifactPath = join(
 // Links seeded at deploy time. Prices are in US cents.
 //
 // These are deliberately tiny. FLR trades near $0.006 on Coston2, so one
-// dollar costs about 160 C2FLR, and the faucet hands out roughly 100. Prices
-// this small keep every seeded link payable from a single faucet claim.
+// dollar costs about 160 C2FLR, and the faucet hands out roughly 100. FXRP
+// (testnet XRP) trades near $1, so the same dollar prices need only a handful
+// of FXRP. Prices this small keep every seeded link payable from a single
+// faucet claim.
 const seedLinks = [
   { slug: "arcade-run-001", title: "Arcade Run 001", priceUsdCents: 25 },
   { slug: "studio-retainer-july", title: "July studio retainer", priceUsdCents: 10 },
@@ -63,11 +66,15 @@ async function main() {
   // registry, then pass it in so the contract has no network-specific import.
   const ftsoV2Address = await resolveFtsoV2Address(provider);
 
+  // Resolve the FXRP FAsset token (testnet XRP) from the registry too.
+  const fxrpAddress = await resolveFxrpAddress(provider);
+
   console.log("");
   console.log("Deploying RailSplitPay...");
   console.log("FTSOv2 feed:  " + ftsoV2Address);
+  console.log("FXRP token:   " + fxrpAddress);
 
-  const contract = await factory.deploy(ftsoV2Address);
+  const contract = await factory.deploy(ftsoV2Address, fxrpAddress);
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();
@@ -76,15 +83,22 @@ async function main() {
   console.log("Deployed to: " + address);
   console.log("Tx:          " + EXPLORER + "/tx/" + deployTx.hash);
 
-  // Confirm the FTSO feed reads before seeding, so a broken oracle wiring
+  // Confirm the FTSO feeds read before seeding, so a broken oracle wiring
   // shows up here rather than at a customer's checkout.
-  const [feedValue, feedDecimals, feedTimestamp] = await contract.flrUsdFeed();
-  const price = Number(feedValue) / 10 ** Number(feedDecimals);
+  const [flrValue, flrDecimals, flrTimestamp] = await contract.flrUsdFeed();
+  const flrPrice = Number(flrValue) / 10 ** Number(flrDecimals);
   console.log("");
-  console.log("FTSO FLR/USD: " + price.toFixed(6) + " USD");
-  console.log("  raw value:  " + feedValue.toString());
-  console.log("  decimals:   " + feedDecimals.toString());
-  console.log("  timestamp:  " + feedTimestamp.toString());
+  console.log("FTSO FLR/USD: " + flrPrice.toFixed(6) + " USD");
+  console.log("  raw value:  " + flrValue.toString());
+  console.log("  decimals:   " + flrDecimals.toString());
+  console.log("  timestamp:  " + flrTimestamp.toString());
+
+  const [xrpValue, xrpDecimals, xrpTimestamp] = await contract.xrpUsdFeed();
+  const xrpPrice = Number(xrpValue) / 10 ** Number(xrpDecimals);
+  console.log("FTSO XRP/USD: " + xrpPrice.toFixed(6) + " USD");
+  console.log("  raw value:  " + xrpValue.toString());
+  console.log("  decimals:   " + xrpDecimals.toString());
+  console.log("  timestamp:  " + xrpTimestamp.toString());
 
   console.log("");
   console.log("Seeding payment links...");
@@ -99,6 +113,7 @@ async function main() {
     await tx.wait();
 
     const [requiredWei] = await contract.quote(link.slug);
+    const [requiredFxrp] = await contract.quoteFxrp(link.slug);
     console.log(
       "  " +
         link.slug.padEnd(24) +
@@ -106,7 +121,9 @@ async function main() {
         (link.priceUsdCents / 100).toFixed(2).padStart(9) +
         "  =  " +
         Number(formatEther(requiredWei)).toFixed(4) +
-        " C2FLR",
+        " C2FLR  /  " +
+        Number(formatUnits(requiredFxrp, 6)).toFixed(4) +
+        " FXRP",
     );
   }
 

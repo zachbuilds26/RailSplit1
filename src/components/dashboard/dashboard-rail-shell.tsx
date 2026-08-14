@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { RailsplitLogo } from "@/components/ui/railsplit-logo";
 import { DashboardSidebarAccount } from "@/components/dashboard/dashboard-sidebar-account";
 import { buildExplorerAddressUrl, getRail, shortenAddress, type RailConfig, type RailKey } from "@/lib/chain";
+import { FXRP } from "@/lib/rails";
 
 type DashboardRailContextValue = {
   railKey: RailKey;
@@ -70,6 +71,19 @@ function DashboardChrome({ children }: { children: ReactNode }) {
                     ) : (
                       <span className="text-xs text-muted">Not deployed</span>
                     )}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-muted">FXRP token</dt>
+                  <dd className="text-right">
+                    <a
+                      href={buildExplorerAddressUrl(rail.key, FXRP.address)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono text-xs text-accent underline underline-offset-2 hover:text-white"
+                    >
+                      {shortenAddress(FXRP.address)}
+                    </a>
                   </dd>
                 </div>
               </dl>

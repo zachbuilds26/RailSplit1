@@ -19,7 +19,7 @@ const faqItems = [
   {
     question: "What does RailSplit do?",
     answer:
-      "RailSplit turns a merchant's dollar price into an onchain payment link. The customer pays in the network's native coin at the live FTSOv2 FLR/USD rate, and the funds move to the merchant's wallet without an intermediary.",
+      "RailSplit turns a merchant's dollar price into an onchain payment link. The customer chooses to pay in the network's native coin or in FXRP (testnet XRP as an ERC-20 FAsset), each at its live FTSOv2 feed rate, and the funds move to the merchant's wallet without an intermediary.",
   },
   {
     question: "Who sets the coin amount?",
@@ -154,7 +154,7 @@ export function DocsPage() {
               <li>
                 <strong>Share one payment link.</strong> Customers open it, connect a wallet, and
                 see the dollar price with the coin amount due right now, read from the live FTSOv2
-                FLR/USD feed.
+                feed for the coin they pick — C2FLR or FXRP.
               </li>
               <li>
                 <strong>Settle onchain.</strong> The contract reads the feed again at payment time,

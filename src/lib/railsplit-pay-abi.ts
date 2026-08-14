@@ -3,6 +3,22 @@
 
 export const RAILSPLIT_PAY_ABI = [
   {
+    "inputs": [
+      {
+        "internalType": "contract IFtsoV2",
+        "name": "ftsoV2_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "fxrp_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "inputs": [],
     "name": "ExpiryInPast",
     "type": "error"
@@ -26,6 +42,11 @@ export const RAILSPLIT_PAY_ABI = [
   {
     "inputs": [],
     "name": "FeedUnavailable",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "FxrpRequired",
     "type": "error"
   },
   {
@@ -197,13 +218,13 @@ export const RAILSPLIT_PAY_ABI = [
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "flrUsdPrice",
+        "name": "feedUsdPrice",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "int8",
-        "name": "flrUsdDecimals",
+        "name": "feedUsdDecimals",
         "type": "int8"
       },
       {
@@ -211,10 +232,42 @@ export const RAILSPLIT_PAY_ABI = [
         "internalType": "uint64",
         "name": "feedTimestamp",
         "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "asset",
+        "type": "uint8"
       }
     ],
     "name": "PaymentReceived",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "ASSET_FXRP",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ASSET_NATIVE",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [],
@@ -237,6 +290,19 @@ export const RAILSPLIT_PAY_ABI = [
         "internalType": "uint64",
         "name": "",
         "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "XRP_USD_FEED_ID",
+    "outputs": [
+      {
+        "internalType": "bytes21",
+        "name": "",
+        "type": "bytes21"
       }
     ],
     "stateMutability": "view",
@@ -307,6 +373,45 @@ export const RAILSPLIT_PAY_ABI = [
         "internalType": "uint64",
         "name": "timestamp",
         "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ftsoV2",
+    "outputs": [
+      {
+        "internalType": "contract IFtsoV2",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fxrp",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fxrpDecimals",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -579,13 +684,18 @@ export const RAILSPLIT_PAY_ABI = [
           },
           {
             "internalType": "uint256",
-            "name": "flrUsdPrice",
+            "name": "feedUsdPrice",
             "type": "uint256"
           },
           {
             "internalType": "int8",
-            "name": "flrUsdDecimals",
+            "name": "feedUsdDecimals",
             "type": "int8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "asset",
+            "type": "uint8"
           }
         ],
         "internalType": "struct RailSplitPay.Payment[]",
@@ -695,6 +805,24 @@ export const RAILSPLIT_PAY_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "payFxrp",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "paymentCount",
     "outputs": [
@@ -744,6 +872,40 @@ export const RAILSPLIT_PAY_ABI = [
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "slug",
+        "type": "string"
+      }
+    ],
+    "name": "quoteFxrp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "requiredFxrp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "xrpUsdPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int8",
+        "name": "xrpUsdDecimals",
+        "type": "int8"
+      },
+      {
+        "internalType": "uint64",
+        "name": "feedTimestamp",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint64",
         "name": "priceUsdCents",
         "type": "uint64"
@@ -769,6 +931,63 @@ export const RAILSPLIT_PAY_ABI = [
       {
         "internalType": "uint64",
         "name": "feedTimestamp",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "priceUsdCents",
+        "type": "uint64"
+      }
+    ],
+    "name": "quoteUsdCentsFxrp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "requiredFxrp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "xrpUsdPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int8",
+        "name": "xrpUsdDecimals",
+        "type": "int8"
+      },
+      {
+        "internalType": "uint64",
+        "name": "feedTimestamp",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "xrpUsdFeed",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int8",
+        "name": "decimals",
+        "type": "int8"
+      },
+      {
+        "internalType": "uint64",
+        "name": "timestamp",
         "type": "uint64"
       }
     ],

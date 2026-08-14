@@ -11,6 +11,8 @@ import { buildCheckoutPath, explorerAddress, railsplitChain, shortenAddress } fr
 import { formatReadError } from "@/lib/railsplit-errors";
 import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
 import {
+  assetSymbol,
+  formatAssetAmount,
   formatCoin,
   formatFeedPrice,
   formatUsdCents,
@@ -57,6 +59,19 @@ function formatSettlementAge(now: bigint | undefined, paidAt: bigint) {
   if (seconds < 3600) return `${Math.max(1, Math.round(seconds / 60))}m ago`;
   if (seconds < 86400) return `${Math.max(1, Math.round(seconds / 3600))}h ago`;
   return `${Math.max(1, Math.round(seconds / 86400))}d ago`;
+}
+
+/** "12.34 C2FLR + 0.25 FXRP settled", showing each asset the merchant actually received. */
+function formatSettledBreakdown(collectedNative: bigint, collectedFxrp: bigint) {
+  const parts: string[] = [];
+  if (collectedNative > 0n) {
+    parts.push(`${formatCoin(collectedNative, 2)} ${railsplitChain.nativeCurrency.symbol}`);
+  }
+  if (collectedFxrp > 0n) {
+    parts.push(`${formatAssetAmount(collectedFxrp, 1, 2)} ${assetSymbol(1)}`);
+  }
+  if (parts.length === 0) return "0.00 settled";
+  return `${parts.join(" + ")} settled`;
 }
 
 function LinkActions({
@@ -126,14 +141,20 @@ export function DashboardOverview() {
 
   const totals = useMemo(() => {
     const collectedUsdCents = links.reduce((sum, link) => sum + link.totalReceivedUsdCents, 0n);
-    const collectedWei = links.reduce((sum, link) => sum + link.totalReceivedWei, 0n);
+
+    let collectedNative = 0n;
+    let collectedFxrp = 0n;
+    for (const payment of payments) {
+      if (payment.asset === 1) collectedFxrp += payment.amountWei;
+      else collectedNative += payment.amountWei;
+    }
 
     const active = links.filter(
       (link) => link.active && !isExpired(link.expiresAt, now),
     ).length;
 
-    return { collectedUsdCents, collectedWei, active };
-  }, [links, now]);
+    return { collectedUsdCents, collectedNative, collectedFxrp, active };
+  }, [links, payments, now]);
 
   const linksTotalPages = Math.max(1, Math.ceil(links.length / LINKS_PAGE_SIZE));
   const safeLinksPage = Math.min(linksPage, linksTotalPages - 1);
@@ -325,7 +346,7 @@ export function DashboardOverview() {
             <Skeleton className="mt-2 h-3 w-40" />
           ) : (
             <p className="mt-2 text-xs text-muted tabular-nums">
-              {formatCoin(totals.collectedWei, 2)} {railsplitChain.nativeCurrency.symbol} settled
+              {formatSettledBreakdown(totals.collectedNative, totals.collectedFxrp)}
             </p>
           )}
         </article>
@@ -577,7 +598,10 @@ Recent settlements
                     <p className="mt-1 font-mono text-xs text-muted">
                       {shortenAddress(payment.payer)}
                     </p>
-                    <p className="mt-1 text-[10px] text-faint">
+                    <p className="mt-1 flex items-center gap-2 text-[10px] text-faint">
+                      <span className="inline-flex border border-line px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.1em] uppercase">
+                        {assetSymbol(payment.asset)}
+                      </span>
                       Settled {formatSettlementAge(now, payment.paidAt) ?? "onchain"}
                     </p>
                   </div>
@@ -586,8 +610,8 @@ Recent settlements
                       {formatUsdCents(payment.priceUsdCents)}
                     </p>
                     <p className="mt-1 text-xs text-muted tabular-nums">
-                      {formatCoin(payment.amountWei, 2)}{" "}
-                      {railsplitChain.nativeCurrency.symbol}
+                      {formatAssetAmount(payment.amountWei, payment.asset, 2)}{" "}
+                      {assetSymbol(payment.asset)}
                     </p>
                   </div>
                 </li>

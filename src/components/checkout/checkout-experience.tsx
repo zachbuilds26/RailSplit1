@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount, useBalance, useReadContract } from "wagmi";
 import { Icon } from "@/components/ui/icon";
 import { RailsplitLogo } from "@/components/ui/railsplit-logo";
 import { ConnectWallet } from "@/components/wallet/connect-wallet";
 import { explorerTx, railsplitChain } from "@/lib/chain";
 import { formatReadError, withQuoteBuffer } from "@/lib/railsplit-errors";
+import { FXRP } from "@/lib/rails";
 import { saveStoredReceipt } from "@/lib/receipt-history";
 import {
-  formatCoin,
+  assetSymbol,
+  formatAssetAmount,
   formatFeedPrice,
   formatUsdCents,
   isExpired,
@@ -18,14 +20,19 @@ import {
   useNow,
   usePaymentLink,
   usePaymentQuote,
+  usePaymentQuoteFxrp,
   usePayLink,
+  usePayLinkFxrp,
   type OnchainLink,
+  type SettlementAsset,
 } from "@/lib/use-railsplit";
 
 // Matches MAX_QUOTE_AGE in RailSplitPay.sol. The contract refuses to settle
 // on a feed older than this, so the checkout stops a payment before it is
 // attempted rather than letting it fail onchain.
 const MAX_FEED_AGE_SECONDS = 300;
+
+type PayMethod = "coston2" | "fxrp";
 
 export function CheckoutExperience({ slug }: { slug: string }) {
   const { link, isLoading, error, notFound, refetch } = usePaymentLink(slug);
@@ -88,59 +95,99 @@ function CheckoutCard({
 }) {
   const { isConnected, chainId, address } = useAccount();
   const onCorrectChain = isConnected && chainId === railsplitChain.id;
+  const [method, setMethod] = useState<PayMethod>("coston2");
 
-  const quote = usePaymentQuote(slug, onCorrectChain);
-  const feedAge = useFeedAge(quote.feedTimestamp);
+  const isFxrp = method === "fxrp";
+
+  const quote = usePaymentQuote(slug, onCorrectChain && !isFxrp);
+  const quoteFxrp = usePaymentQuoteFxrp(slug, onCorrectChain && isFxrp);
+  const feedAge = useFeedAge(isFxrp ? quoteFxrp.feedTimestamp : quote.feedTimestamp);
   const now = useNow();
   const payment = usePayLink(slug);
+  const paymentFxrp = usePayLinkFxrp(slug);
   const { refetch: refetchLink } = usePaymentLink(slug);
+
   const {
-    data: balance,
-    isLoading: balanceLoading,
-    error: balanceError,
-    refetch: refetchBalance,
+    data: nativeBalance,
+    isLoading: nativeBalanceLoading,
+    error: nativeBalanceError,
+    refetch: refetchNativeBalance,
   } = useBalance({
     address,
     chainId: railsplitChain.id,
     query: { enabled: Boolean(address) },
   });
 
+  const {
+    data: fxrpBalance,
+    isLoading: fxrpBalanceLoading,
+    error: fxrpBalanceError,
+    refetch: refetchFxrpBalance,
+  } = useReadContract({
+    abi: [
+      {
+        type: "function",
+        name: "balanceOf",
+        stateMutability: "view",
+        inputs: [{ name: "account", type: "address" }],
+        outputs: [{ name: "", type: "uint256" }],
+      },
+    ],
+    address: FXRP.address,
+    functionName: "balanceOf",
+    args: [address ?? "0x0000000000000000000000000000000000000000"],
+    chainId: railsplitChain.id,
+    query: {
+      enabled: Boolean(address),
+      refetchInterval: 12000,
+    },
+  });
+
   const [failure, setFailure] = useState<string | undefined>();
 
+  const activePayment = isFxrp ? paymentFxrp : payment;
+
   useEffect(() => {
-    if (payment.isConfirmed && payment.hash) {
+    if (activePayment.isConfirmed && activePayment.hash) {
       saveStoredReceipt({
         slug,
         title: link.title,
-        hash: payment.hash,
+        hash: activePayment.hash,
         priceUsdCents: link.priceUsdCents.toString(),
         paidAt: Math.floor(Date.now() / 1000),
       });
-      onPaid(payment.hash);
+      onPaid(activePayment.hash);
     }
-  }, [payment.isConfirmed, payment.hash, onPaid, slug, link.title, link.priceUsdCents]);
+  }, [activePayment.isConfirmed, activePayment.hash, onPaid, slug, link.title, link.priceUsdCents]);
 
-  if (payment.isConfirmed && payment.hash) {
-    return <PaidReceipt link={link} slug={slug} hash={payment.hash} />;
+  if (activePayment.isConfirmed && activePayment.hash) {
+    return <PaidReceipt link={link} slug={slug} hash={activePayment.hash} />;
   }
 
-  const required = quote.requiredWei;
+  const required = isFxrp ? quoteFxrp.requiredFxrp : quote.requiredWei;
   const bufferedRequired = required === undefined ? undefined : withQuoteBuffer(required);
   const feedStale = feedAge !== undefined && feedAge > MAX_FEED_AGE_SECONDS;
+  const quoteError = isFxrp ? quoteFxrp.error : quote.error;
+  const quoteFetching = isFxrp ? quoteFxrp.isFetching : quote.isFetching;
+
+  const balance = isFxrp ? (fxrpBalance as bigint | undefined) : (nativeBalance?.value as bigint | undefined);
+  const balanceLoading = isFxrp ? fxrpBalanceLoading : nativeBalanceLoading;
+  const balanceError = isFxrp ? fxrpBalanceError : nativeBalanceError;
+  const refetchBalance = isFxrp ? refetchFxrpBalance : refetchNativeBalance;
   const balanceReady = Boolean(balance) && !balanceLoading && !balanceError;
   const insufficient =
-    bufferedRequired !== undefined && balanceReady && balance!.value < bufferedRequired;
+    bufferedRequired !== undefined && balanceReady && balance !== undefined && balance < bufferedRequired;
   const canPay =
     onCorrectChain &&
     bufferedRequired !== undefined &&
     balanceReady &&
     !insufficient &&
     !feedStale &&
-    !quote.error &&
-    !quote.isFetching;
+    !quoteError &&
+    !quoteFetching;
 
   async function handlePay() {
-    if (required === undefined || quote.error || quote.isFetching || feedStale) return;
+    if (required === undefined || quoteError || quoteFetching || feedStale) return;
 
     setFailure(undefined);
 
@@ -160,12 +207,12 @@ function CheckoutCard({
       return;
     }
 
-    const refreshedQuote = await quote.refetch();
+    const refreshedQuote = isFxrp ? await quoteFxrp.refetch() : await quote.refetch();
     const freshRequired = refreshedQuote.data?.[0];
     if (refreshedQuote.error || freshRequired === undefined) {
       setFailure(
         formatReadError(
-          refreshedQuote.error ?? quote.error,
+          refreshedQuote.error ?? quoteError,
           "RailSplit could not refresh the checkout quote right now. Try again in a moment.",
         ),
       );
@@ -173,13 +220,19 @@ function CheckoutCard({
     }
 
     try {
-      await payment.pay(freshRequired);
+      if (isFxrp) {
+        await paymentFxrp.pay(freshRequired);
+      } else {
+        await payment.pay(freshRequired);
+      }
     } catch (error) {
       setFailure(readableError(error));
     }
   }
 
-  const busy = payment.isSubmitting || payment.isConfirming;
+  const busy = activePayment.isSubmitting || activePayment.isConfirming;
+  const settlementAsset: SettlementAsset = isFxrp ? 1 : 0;
+  const paySymbol = assetSymbol(settlementAsset);
 
   return (
     <section className="border border-line bg-surface">
@@ -194,6 +247,46 @@ function CheckoutCard({
       <div className="p-5 sm:p-7">
         <h1 className="text-2xl font-medium tracking-[-0.045em]">{link.title}</h1>
 
+        <div className="mt-5">
+          <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
+            Pay with
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-2" role="tablist" aria-label="Payment method">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!isFxrp}
+              onClick={() => setMethod("coston2")}
+              className={`border px-4 py-3 text-left text-sm font-semibold transition ${
+                !isFxrp
+                  ? "border-accent bg-accent/10 text-ink"
+                  : "border-line bg-background text-muted hover:border-line-strong hover:text-ink"
+              }`}
+            >
+              <span className="block">{railsplitChain.nativeCurrency.symbol}</span>
+              <span className="mt-0.5 block text-[10px] font-medium tracking-[0.08em] text-faint uppercase">
+                Native gas coin
+              </span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isFxrp}
+              onClick={() => setMethod("fxrp")}
+              className={`border px-4 py-3 text-left text-sm font-semibold transition ${
+                isFxrp
+                  ? "border-accent bg-accent/10 text-ink"
+                  : "border-line bg-background text-muted hover:border-line-strong hover:text-ink"
+              }`}
+            >
+              <span className="block">FXRP</span>
+              <span className="mt-0.5 block text-[10px] font-medium tracking-[0.08em] text-faint uppercase">
+                Testnet XRP on Flare
+              </span>
+            </button>
+          </div>
+        </div>
+
         <div className="mt-7 border-y border-line py-5">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
             Amount due
@@ -203,19 +296,17 @@ function CheckoutCard({
           </p>
 
           <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-line pt-4">
-            <span className="text-xs text-muted">Estimated in C2FLR</span>
+            <span className="text-xs text-muted">Estimated in {paySymbol}</span>
             <span className="text-right text-base font-semibold tabular-nums">
               {onCorrectChain ? (
-                quote.error ? (
+                quoteError ? (
                   <span className="text-sm text-muted">Current rate unavailable</span>
-                ) : quote.isLoading || bufferedRequired === undefined ? (
+                ) : bufferedRequired === undefined ? (
                   <span className="text-sm text-muted">Updating live rate…</span>
                 ) : (
                   <>
-                    {formatCoin(bufferedRequired)}{" "}
-                    <span className="text-xs text-muted">
-                      {railsplitChain.nativeCurrency.symbol}
-                    </span>
+                    {formatAssetAmount(bufferedRequired, settlementAsset)}{" "}
+                    <span className="text-xs text-muted">{paySymbol}</span>
                   </>
                 )
               ) : (
@@ -225,7 +316,7 @@ function CheckoutCard({
           </div>
         </div>
 
-        {onCorrectChain && quote.flrUsdPrice !== undefined && !quote.error && !feedStale && (
+        {onCorrectChain && (isFxrp ? quoteFxrp.xrpUsdPrice : quote.flrUsdPrice) !== undefined && !quoteError && !feedStale && (
           <div className="mt-5 border border-line bg-background-deep px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
@@ -236,7 +327,7 @@ function CheckoutCard({
               )}
             </div>
             <p className="mt-2 text-sm font-semibold tabular-nums">
-              1 {railsplitChain.nativeCurrency.symbol} = {formatFeedPrice(quote.flrUsdPrice, quote.flrUsdDecimals)} USD
+              1 {paySymbol} = {formatFeedPrice(isFxrp ? quoteFxrp.xrpUsdPrice : quote.flrUsdPrice, isFxrp ? quoteFxrp.xrpUsdDecimals : quote.flrUsdDecimals)} USD
             </p>
             <p className="mt-2 text-xs leading-5 text-muted">
               The final amount is set when payment is confirmed.
@@ -249,16 +340,16 @@ function CheckoutCard({
             className="mt-5"
             title="The current rate is too old to use."
             copy="Flare's price feed has not updated recently, so RailSplit cannot settle a payment on it. Check back in a moment."
-            onRetry={() => quote.refetch()}
+            onRetry={() => (isFxrp ? quoteFxrp.refetch() : quote.refetch())}
           />
         )}
 
-        {onCorrectChain && quote.error && !feedStale && (
+        {onCorrectChain && quoteError && !feedStale && (
           <ReadFailure
             className="mt-5"
             title="The current rate is unavailable right now."
-            copy={formatReadError(quote.error)}
-            onRetry={() => quote.refetch()}
+            copy={formatReadError(quoteError)}
+            onRetry={() => (isFxrp ? quoteFxrp.refetch() : quote.refetch())}
           />
         )}
 
@@ -281,8 +372,9 @@ function CheckoutCard({
 
             {insufficient && bufferedRequired !== undefined && (
               <p className="mt-4 text-xs leading-5 text-warning">
-                This wallet holds {formatCoin(balance?.value)} {railsplitChain.nativeCurrency.symbol}.
-                The checkout needs {formatCoin(bufferedRequired)} plus gas.
+                This wallet holds {formatAssetAmount(balance, settlementAsset)} {paySymbol}.
+                The checkout needs {formatAssetAmount(bufferedRequired, settlementAsset)}.
+                {!isFxrp && " Plus a little for gas."}
               </p>
             )}
 
@@ -292,8 +384,8 @@ function CheckoutCard({
               onClick={handlePay}
               className="mt-4 inline-flex w-full items-center justify-center gap-2 bg-accent px-5 py-3.5 text-sm font-semibold text-accent-ink hover:bg-white disabled:opacity-60"
             >
-              {payment.isSubmitting && "Approve in your wallet…"}
-              {payment.isConfirming && "Processing payment…"}
+              {activePayment.isSubmitting && (isFxrp ? "Approving and paying…" : "Approve in your wallet…")}
+              {activePayment.isConfirming && "Processing payment…"}
               {!busy && (
                 <>
                   Pay <span className="price-figure">{formatUsdCents(link.priceUsdCents)}</span>
@@ -302,9 +394,9 @@ function CheckoutCard({
               )}
             </button>
 
-            {payment.hash && payment.isConfirming && (
+            {activePayment.hash && activePayment.isConfirming && (
               <a
-                href={explorerTx(payment.hash)}
+                href={explorerTx(activePayment.hash)}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-3 block text-center text-xs text-accent underline underline-offset-2 hover:text-white"
@@ -313,11 +405,11 @@ function CheckoutCard({
               </a>
             )}
 
-            {(failure || payment.error) && (
+            {(failure || activePayment.error) && (
               <ReadFailure
                 className="mt-4"
                 title="The payment could not be completed."
-                copy={failure ?? readableError(payment.error)}
+                copy={failure ?? readableError(activePayment.error)}
               />
             )}
           </>
@@ -460,6 +552,10 @@ function readableError(error: unknown): string {
 
   if (/LinkExpired/i.test(message)) return "This link expired before payment was confirmed.";
   if (/LinkInactive/i.test(message)) return "The merchant closed this link.";
+
+  if (/InsufficientAllowance|ERC20InsufficientAllowance/i.test(message)) {
+    return "This wallet has not approved enough FXRP. Try paying again so the approval step can complete.";
+  }
 
   return formatReadError(error, message.split("\n")[0] || "The payment could not be completed.");
 }

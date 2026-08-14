@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   formatEther,
+  formatUnits,
   keccak256,
   parseEventLogs,
   stringToHex,
@@ -16,16 +17,33 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { railsplitChain } from "@/lib/chain";
+import { waitForTransactionReceipt as wagmiWaitForTransactionReceipt } from "wagmi/actions";
+import { railsplitChain, wagmiConfig } from "@/lib/chain";
 import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
 import { isUnknownLinkError, withQuoteBuffer } from "@/lib/railsplit-errors";
 import { RAILSPLIT_PAY_ABI } from "@/lib/railsplit-pay-abi";
+import { FXRP } from "@/lib/rails";
 
 const contract = {
   address: RAILSPLIT_PAY_ADDRESS,
   abi: RAILSPLIT_PAY_ABI,
   chainId: railsplitChain.id,
 } as const;
+
+/** Settlement asset from the contract: 0 = native C2FLR, 1 = FXRP. */
+export type SettlementAsset = 0 | 1;
+
+export function assetSymbol(asset: SettlementAsset | undefined) {
+  return asset === 1 ? FXRP.symbol : railsplitChain.nativeCurrency.symbol;
+}
+
+/** Formats a base-unit amount for a given asset (6 decimals for FXRP, 18 for C2FLR). */
+export function formatAssetAmount(value: bigint | undefined, asset: SettlementAsset | undefined, maximumFractionDigits = 4) {
+  if (value === undefined) return "—";
+  return asset === 1
+    ? Number(formatUnits(value, FXRP.decimals)).toLocaleString("en-US", { maximumFractionDigits })
+    : formatCoin(value, maximumFractionDigits);
+}
 
 export type OnchainLink = {
   merchant: `0x${string}`;
@@ -194,6 +212,157 @@ export function usePayLink(slug: string) {
   };
 }
 
+/**
+ * Live FXRP quote for a link, refreshed on a timer.
+ *
+ * FXRP is the FAsset representation of XRP on Flare. The XRP/USD rate moves,
+ * so the FXRP amount due moves with it. Re-reading keeps the figure on screen
+ * close to what the contract will charge.
+ */
+export function usePaymentQuoteFxrp(slug: string, enabled = true) {
+  const query = useReadContract({
+    ...contract,
+    functionName: "quoteFxrp",
+    args: [slug],
+    query: {
+      enabled: enabled && Boolean(slug),
+      refetchInterval: 12000,
+    },
+  });
+
+  const data = query.data as
+    | readonly [bigint, bigint, number, bigint]
+    | undefined;
+
+  return {
+    requiredFxrp: data?.[0],
+    xrpUsdPrice: data?.[1],
+    xrpUsdDecimals: data?.[2],
+    feedTimestamp: data?.[3],
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    error: query.error,
+    refetch: query.refetch,
+  };
+}
+
+/**
+ * Sends a payment in FXRP.
+ *
+ * The payer must first approve the contract to spend their FXRP, then this
+ * pulls the quoted amount plus a buffer and forwards the converted price to
+ * the merchant, refunding the surplus in the same transaction.
+ */
+export function usePayLinkFxrp(slug: string) {
+  const { address } = useAccount();
+  const {
+    writeContractAsync: writeApprove,
+    isPending: approvePending,
+    error: approveError,
+    reset: resetApprove,
+  } = useWriteContract();
+  const {
+    writeContractAsync: writePay,
+    isPending: payPending,
+    error: payError,
+    reset: resetPay,
+  } = useWriteContract();
+  const [hash, setHash] = useState<`0x${string}` | undefined>();
+
+  const receipt = useWaitForTransactionReceipt({
+    hash,
+    chainId: railsplitChain.id,
+  });
+
+  // How much FXRP the contract is allowed to pull for this payer.
+  const allowance = useReadContract({
+    abi: [
+      {
+        type: "function",
+        name: "allowance",
+        stateMutability: "view",
+        inputs: [
+          { name: "owner", type: "address" },
+          { name: "spender", type: "address" },
+        ],
+        outputs: [{ name: "", type: "uint256" }],
+      },
+    ],
+    address: FXRP.address,
+    functionName: "allowance",
+    args: [address ?? "0x0000000000000000000000000000000000000000", RAILSPLIT_PAY_ADDRESS],
+    chainId: railsplitChain.id,
+    query: {
+      enabled: Boolean(address),
+      refetchInterval: 12000,
+    },
+  });
+
+  const pay = useCallback(
+    async (requiredFxrp: bigint) => {
+      const value = withQuoteBuffer(requiredFxrp);
+      resetPay();
+      resetApprove();
+      setHash(undefined);
+
+      // Approve only if the existing allowance cannot cover the amount.
+      const existingAllowance = allowance.data as bigint | undefined;
+      if (existingAllowance === undefined || existingAllowance < value) {
+        const approveTx = await writeApprove({
+          address: FXRP.address,
+          abi: [
+            {
+              type: "function",
+              name: "approve",
+              stateMutability: "nonpayable",
+              inputs: [
+                { name: "spender", type: "address" },
+                { name: "amount", type: "uint256" },
+              ],
+              outputs: [{ name: "", type: "bool" }],
+            },
+          ],
+          functionName: "approve",
+          args: [RAILSPLIT_PAY_ADDRESS, value],
+          chainId: railsplitChain.id,
+        });
+        await wagmiWaitForTransactionReceipt(wagmiConfig, {
+          hash: approveTx,
+          confirmations: 1,
+          timeout: 60_000,
+        });
+      }
+
+      const txHash = await writePay({
+        ...contract,
+        functionName: "payFxrp",
+        args: [slug, value],
+      });
+
+      setHash(txHash);
+      return txHash;
+    },
+    [allowance.data, resetApprove, resetPay, slug, writeApprove, writePay],
+  );
+
+  const clear = useCallback(() => {
+    setHash(undefined);
+    resetPay();
+    resetApprove();
+  }, [resetPay, resetApprove]);
+
+  return {
+    pay,
+    clear,
+    hash,
+    address,
+    isSubmitting: approvePending || payPending,
+    isConfirming: receipt.isLoading,
+    isConfirmed: receipt.isSuccess,
+    error: approveError ?? payError ?? receipt.error,
+  };
+}
+
 export type PaymentReceipt = {
   linkId: `0x${string}`;
   merchant: `0x${string}`;
@@ -206,6 +375,7 @@ export type PaymentReceipt = {
   paidAt: bigint;
   hash: `0x${string}`;
   blockNumber: bigint;
+  asset: SettlementAsset;
 };
 
 /**
@@ -286,12 +456,13 @@ export function usePaymentReceipt(slug: string, txHash: `0x${string}` | undefine
           payer: validation.event.args.payer,
           amountWei: validation.event.args.amountWei,
           priceUsdCents: validation.event.args.priceUsdCents,
-          flrUsdPrice: validation.event.args.flrUsdPrice,
-          flrUsdDecimals: Number(validation.event.args.flrUsdDecimals),
+          flrUsdPrice: validation.event.args.feedUsdPrice,
+          flrUsdDecimals: Number(validation.event.args.feedUsdDecimals),
           feedTimestamp: validation.event.args.feedTimestamp,
           paidAt: block.data?.timestamp ?? 0n,
           hash: txHash as `0x${string}`,
           blockNumber: receipt.data?.blockNumber ?? 0n,
+          asset: Number(validation.event.args.asset) as SettlementAsset,
         } satisfies PaymentReceipt)
       : undefined;
 
@@ -328,6 +499,7 @@ export type SettlementEvent = {
   paidAt: bigint;
   flrUsdPrice: bigint;
   flrUsdDecimals: number;
+  asset: SettlementAsset;
 };
 
 type ContractLink = {
@@ -349,8 +521,9 @@ type ContractPayment = {
   amountWei: bigint;
   priceUsdCents: bigint;
   paidAt: bigint;
-  flrUsdPrice: bigint;
-  flrUsdDecimals: number;
+  feedUsdPrice: bigint;
+  feedUsdDecimals: number;
+  asset: number;
 };
 
 /**
@@ -502,8 +675,9 @@ async function scanPayments(
         amountWei: payment.amountWei,
         priceUsdCents: payment.priceUsdCents,
         paidAt: payment.paidAt,
-        flrUsdPrice: payment.flrUsdPrice,
-        flrUsdDecimals: Number(payment.flrUsdDecimals),
+        flrUsdPrice: payment.feedUsdPrice,
+        flrUsdDecimals: Number(payment.feedUsdDecimals),
+        asset: Number(payment.asset) as SettlementAsset,
       });
     }
 
@@ -521,6 +695,26 @@ export function useFlrUsdFeed() {
   const query = useReadContract({
     ...contract,
     functionName: "flrUsdFeed",
+    query: { refetchInterval: 12000 },
+  });
+
+  const data = query.data as readonly [bigint, number, bigint] | undefined;
+
+  return {
+    value: data?.[0],
+    decimals: data?.[1],
+    timestamp: data?.[2],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  };
+}
+
+/** Reads the live XRP/USD feed straight from the contract. */
+export function useXrpUsdFeed() {
+  const query = useReadContract({
+    ...contract,
+    functionName: "xrpUsdFeed",
     query: { refetchInterval: 12000 },
   });
 
@@ -578,6 +772,28 @@ export function quoteUsdCentsToWei(
   }
 
   return scaledCents / (flrUsdPrice * 10n ** BigInt(-flrUsdDecimals));
+}
+
+/**
+ * Converts US cents to FXRP base units (6 decimals on Coston2) at the live
+ * XRP/USD feed rate. Mirrors the contract's `_requiredAmount` for FXRP.
+ */
+export function quoteUsdCentsToFxrp(
+  priceUsdCents: bigint,
+  xrpUsdPrice: bigint | undefined,
+  xrpUsdDecimals: number | undefined,
+) {
+  if (xrpUsdPrice === undefined || xrpUsdPrice === 0n || xrpUsdDecimals === undefined) {
+    return undefined;
+  }
+
+  const scaledCents = priceUsdCents * 10n ** BigInt(FXRP.decimals - 2);
+
+  if (xrpUsdDecimals >= 0) {
+    return (scaledCents * 10n ** BigInt(xrpUsdDecimals)) / xrpUsdPrice;
+  }
+
+  return scaledCents / (xrpUsdPrice * 10n ** BigInt(-xrpUsdDecimals));
 }
 
 /**

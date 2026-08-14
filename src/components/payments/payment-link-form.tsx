@@ -11,10 +11,13 @@ import { RAILSPLIT_PAY_ADDRESS } from "@/lib/contract-address";
 import { formatWriteError } from "@/lib/railsplit-errors";
 import { RAILSPLIT_PAY_ABI } from "@/lib/railsplit-pay-abi";
 import {
+  formatAssetAmount,
   formatCoin,
   formatUsdCents,
+  quoteUsdCentsToFxrp,
   quoteUsdCentsToWei,
   useFlrUsdFeed,
+  useXrpUsdFeed,
 } from "@/lib/use-railsplit";
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -74,9 +77,11 @@ export function PaymentLinkForm() {
   const priceUsdCents = parsedAmount.cents ?? 0n;
   const validAmount = parsedAmount.cents !== undefined;
 
-  // The live rate, used to show the customer-side coin amount in the preview.
+  // The live rates, used to show the customer-side coin amounts in the preview.
   const feed = useFlrUsdFeed();
+  const xrpFeed = useXrpUsdFeed();
   const previewWei = parsedAmount.cents === undefined ? undefined : quoteUsdCentsToWei(priceUsdCents, feed.value, feed.decimals);
+  const previewFxrp = parsedAmount.cents === undefined ? undefined : quoteUsdCentsToFxrp(priceUsdCents, xrpFeed.value, xrpFeed.decimals);
 
   const preview = {
     title: title.trim() || "Untitled payment",
@@ -277,13 +282,14 @@ export function PaymentLinkForm() {
 
             <div className="border-y border-line py-5">
               <p className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
-  Payout destination
+  Payout destinations
               </p>
               <p className="mt-2 text-sm">
-                {railsplitChain.nativeCurrency.symbol} on {railsplitChain.name}
+                {railsplitChain.nativeCurrency.symbol} or FXRP on {railsplitChain.name}
               </p>
               <p className="mt-2 text-xs leading-5 text-muted">
-                The payment settles directly to your connected wallet. RailSplit never holds funds.
+                Customers choose which coin to pay with at checkout. The payment settles directly
+                to your connected wallet in the coin they used. RailSplit never holds funds.
               </p>
             </div>
 
@@ -392,6 +398,12 @@ export function PaymentLinkForm() {
                   Approx. {" "}
                   {formatCoin(previewWei, 2)} {railsplitChain.nativeCurrency.symbol} at the current
                   rate
+                </p>
+              )}
+              {previewFxrp !== undefined && priceUsdCents > 0 && (
+                <p className="mt-1 text-xs text-muted tabular-nums">
+                  Approx.{" "}
+                  {formatAssetAmount(previewFxrp, 1, 2)} FXRP at the current rate
                 </p>
               )}
             </div>

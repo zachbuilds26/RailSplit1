@@ -10,12 +10,12 @@ const faqItems = [
   {
     question: "What is RailSplit?",
     answer:
-      "RailSplit gives a merchant one link per payment priced in US dollars. Customers pay in the network's native coin at the live rate, and the settlement arrives directly in the merchant wallet.",
+      "RailSplit gives a merchant one link per payment priced in US dollars. Customers choose to pay in the network's native coin or in FXRP (testnet XRP), and the settlement arrives directly in the merchant wallet.",
   },
   {
     question: "Where does the amount come from?",
     answer:
-      "The contract reads the live FTSOv2 FLR/USD feed at payment time and does the conversion itself. No one can pass in a rate, so the amount stays current when the payment lands.",
+      "The contract reads the live FTSOv2 feed for the chosen coin at payment time and does the conversion itself. No one can pass in a rate, so the amount stays current when the payment lands.",
   },
   {
     question: "Do you hold funds?",
